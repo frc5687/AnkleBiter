@@ -3,10 +3,8 @@ package org.frc5687.robot.subsystems;
 import static org.frc5687.robot.Constants.DriveTrain.HEADING_kD;
 import static org.frc5687.robot.Constants.DriveTrain.HEADING_kI;
 import static org.frc5687.robot.Constants.DriveTrain.HEADING_kP;
-import static org.frc5687.robot.Constants.DriveTrain.HIGH_KINEMATIC_LIMITS;
-import static org.frc5687.robot.Constants.DriveTrain.LOW_KINEMATIC_LIMITS;
+import static org.frc5687.robot.Constants.DriveTrain.KINEMATIC_LIMITS;
 import static org.frc5687.robot.Constants.DriveTrain.NUM_MODULES;
-import static org.frc5687.robot.Constants.DriveTrain.SHIFT_UP_SPEED_MPS;
 
 import java.util.Optional;
 
@@ -105,11 +103,7 @@ public class DriveTrain extends OutliersSubsystem {
     private static final int NORTH_EAST_IDX = 3;
 
     private final SwerveSetpointGenerator _swerveSetpointGenerator;
-    private KinematicLimits _kinematicLimits = HIGH_KINEMATIC_LIMITS;
-
-    private final DoubleSolenoid _shift;
-    private final Compressor _compressor;
-
+    private KinematicLimits _kinematicLimits = KINEMATIC_LIMITS;
 
     private final BaseStatusSignal[] _signals;
 
@@ -126,12 +120,6 @@ public class DriveTrain extends OutliersSubsystem {
 
     private Pose2d _hoverGoal;
 
-    private boolean _shiftLockout = false;
-    private long _shiftTime = 0;
-
-    private boolean _hasShiftInit = false;
-    private boolean _isLowGear;
-
     private final SystemIO _systemIO;
     private final HolonomicDriveController _poseController;
 
@@ -147,13 +135,7 @@ public class DriveTrain extends OutliersSubsystem {
         SignalLogger.setPath("/home/lvuser/logs");
         SignalLogger.start();
 
-        _shift = new DoubleSolenoid(
-                PneumaticsModuleType.REVPH,
-                RobotMap.PCM.SHIFTER_HIGH,
-                RobotMap.PCM.SHIFTER_LOW);
-        // create compressor, compressor logic
-        _compressor = new Compressor(PneumaticsModuleType.REVPH);
-        _compressor.enableDigital();
+        
 
         // configure our system IO and pigeon;
         _imu = imu;
@@ -240,7 +222,6 @@ public class DriveTrain extends OutliersSubsystem {
 
         _hoverGoal = new Pose2d();
         _controlState = ControlState.MANUAL;
-        _isLowGear = false;
 
         zeroGyroscope();
 
@@ -258,7 +239,7 @@ public class DriveTrain extends OutliersSubsystem {
                 new HolonomicPathFollowerConfig( // HolonomicPathFollowerConfig, this should likely live in your Constants class
                         new PIDConstants(3.3, 0.0, 0.05), // Translation PID constants
                         new PIDConstants(Constants.DriveTrain.HEADING_kP, Constants.DriveTrain.HEADING_kI, Constants.DriveTrain.HEADING_kD), // Rotation PID constants
-                        Constants.DriveTrain.MAX_LOW_GEAR_MPS, // Max module speed, in m/s
+                        Constants.DriveTrain.MAX_MPS, // Max module speed, in m/s
                         0.4, // Drive base radius in meters. Distance from robot center to furthest module.
                         new ReplanningConfig() // Default path replanning config. See the API for the options here
                 ),
@@ -342,12 +323,6 @@ public class DriveTrain extends OutliersSubsystem {
 
     @Override
     public void periodic() {
-        // if (!_hasShiftInit) {
-        //     shiftDownModules();
-        //     _hasShiftInit = true;
-        // }
-        // State estimation thread is doing this now. Might cause issues
-        // readSignals();
         _robotState.getWriteLock().lock();
         try {
             updateDesiredStates();
@@ -510,60 +485,7 @@ public class DriveTrain extends OutliersSubsystem {
 
     public double getSpeed() {
         return Math.hypot(getMeasuredChassisSpeeds().vxMetersPerSecond, getMeasuredChassisSpeeds().vyMetersPerSecond);
-    }
-
-    /* Shift stuff start */
-    public void shiftUpModules() {
-        _shift.set(Value.kForward);
-        _isLowGear = false;
-        setKinematicLimits(HIGH_KINEMATIC_LIMITS);
-        for (int i = 0; i < _modules.length; i++) {
-            _modules[i].shiftUp();
-        }
-    }
-
-    public void shiftDownModules() {
-        _shift.set(Value.kReverse);
-        setKinematicLimits(LOW_KINEMATIC_LIMITS);
-        for (int i = 0; i < _modules.length; i++) {
-            _modules[i].shiftDown();
-        }
-        _isLowGear = true;
-    }
-
-    public boolean isLowGear() {
-        return _isLowGear;
-    }
-
-    public void setShiftLockout(boolean lock) {
-        _shiftLockout = lock;
-    }
-
-    public void autoShifter() {
-        double speed = getSpeed();
-        if (speed > Constants.DriveTrain.SHIFT_UP_SPEED_MPS && getDesiredSpeed() > SHIFT_UP_SPEED_MPS) {
-            if (!_shiftLockout) {
-                _shiftLockout = true;
-                _shiftTime = System.currentTimeMillis();
-                shiftUpModules();
-            }
-            if (_shiftTime + Constants.DriveTrain.SHIFT_LOCKOUT < System.currentTimeMillis()) {
-                _shiftLockout = false;
-            }
-        }
-
-        if (speed < Constants.DriveTrain.SHIFT_DOWN_SPEED_MPS) {
-            if (!_shiftLockout) {
-                _shiftTime = System.currentTimeMillis();
-                _shiftLockout = true;
-                shiftDownModules();
-            }
-            if (_shiftTime + Constants.DriveTrain.SHIFT_LOCKOUT < System.currentTimeMillis()) {
-                _shiftLockout = false;
-            }
-        }
-    }
-    /* Shift stuff end */
+    }    
     
     public double getYaw() {
         return _systemIO.heading.getRadians();

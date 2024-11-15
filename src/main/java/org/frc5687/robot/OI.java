@@ -5,8 +5,6 @@ import static org.frc5687.robot.util.Helpers.applyDeadband;
 
 import org.frc5687.lib.oi.AxisButton;
 import org.frc5687.lib.oi.Gamepad;
-import org.frc5687.robot.commands.DriveTrain.ShiftDown;
-import org.frc5687.robot.commands.DriveTrain.ShiftUp;
 import org.frc5687.robot.commands.DriveTrain.SnapTo;
 import org.frc5687.robot.commands.DriveTrain.ZeroIMU;
 import org.frc5687.robot.subsystems.DriveTrain;
@@ -71,9 +69,6 @@ public class OI extends OutliersProxy {
         _driverGamepad.getBButton().onTrue(new SnapTo(drivetrain, new Rotation2d(3 * Math.PI / 2)));
         _driverGamepad.getAButton().onTrue(new SnapTo(drivetrain, new Rotation2d(Math.PI)));
         _driverGamepad.getXButton().onTrue(new SnapTo(drivetrain, new Rotation2d(3 * Math.PI / 2)));
-        
-        // _driverGamepad.getLeftBumper().onTrue(new ShiftDown(drivetrain));
-        // _driverGamepad.getRightBumper().onTrue(new ShiftUp(drivetrain));
 
         _driverGamepad.getStartButton().onTrue(new ZeroIMU(drivetrain));
     }

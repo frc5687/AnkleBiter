@@ -40,7 +40,6 @@ public class RobotMap {
         }
 
         public static class CANDLE {
-            public static final int PORT = 13;
         }
     }
 
@@ -59,11 +58,7 @@ public class RobotMap {
      * unique.
      */
     public static class PCM {
-        public static final int SHIFTER_HIGH = 15; // these values may be flip-flopped
-        public static final int SHIFTER_LOW = 0;
-
-        public static final int RATCHET_RAISE = 4;
-        public static final int RATCHET_LOWER = 5;
+       
     }
 
     /**
@@ -91,13 +86,5 @@ public class RobotMap {
      */
     public static class DIO {
         // IS THIS A 5687 REFERENCE?!?!?!?!?!?!?
-        public static final int DUNKER_ABS_ENCODER = 5;
-        public static final int DUNKER_PROXIMITY_SENSOR = 6;
-        
-        public static final int BOTTOM_DONUT_SENSOR = 8;
-        public static final int TOP_DONUT_SENSOR = 7;
-        
-        public static final int LOWER_HALL = 9;
-
     }
 }

@@ -2,8 +2,6 @@
 package org.frc5687.robot.subsystems;
 
 import static org.frc5687.robot.Constants.SwerveModule.WHEEL_RADIUS;
-import static org.frc5687.robot.Constants.SwerveModule.kDt;
-
 import org.frc5687.lib.drivers.OutliersTalon;
 import org.frc5687.robot.Constants;
 
@@ -143,12 +141,12 @@ public class SwerveModule {
         _steeringVelocityRotationsPerSec = _encoder.getVelocity();
 
         _driveMotor.getFault_Hardware().setUpdateFrequency(4, 0.04);
-        _driveVelocityRotationsPerSec.setUpdateFrequency(1 / kDt);
-        _drivePositionRotations.setUpdateFrequency(1 / kDt);
+        _driveVelocityRotationsPerSec.setUpdateFrequency(1 / 250);
+        _drivePositionRotations.setUpdateFrequency(1 / 250);
 
         _steeringMotor.getFault_Hardware().setUpdateFrequency(4, 0.04);
-        _steeringVelocityRotationsPerSec.setUpdateFrequency(1 / kDt);
-        _steeringPositionRotations.setUpdateFrequency(1 / kDt);
+        _steeringVelocityRotationsPerSec.setUpdateFrequency(1 / 250);
+        _steeringPositionRotations.setUpdateFrequency(1 / 250);
 
         _signals[0] = _driveVelocityRotationsPerSec;
         _signals[1] = _drivePositionRotations;
@@ -169,23 +167,9 @@ public class SwerveModule {
         _steeringVelocityRotationsPerSec.refresh();
     }
 
-    public void shiftDown() {
-        if (!_isLowGear) {
-            setLowGear();
-            transformEncoderFromHighGearToLowGear();
-        }
-    }
-
-    public void shiftUp() {
-        if (_isLowGear) {
-            setHighGear();
-            transformEncoderFromLowGearToHighGear();
-        }
-    }
-
     private SwerveModulePosition calculatePosition() {
         double currentEncoderRotations = BaseStatusSignal.getLatencyCompensatedValue(_drivePositionRotations, _driveVelocityRotationsPerSec);
-        double distanceMeters = currentEncoderRotations * 2.0 * Math.PI / getGearRatio() * Constants.SwerveModule.WHEEL_RADIUS ;
+        double distanceMeters = currentEncoderRotations * 2.0 * Math.PI / Constants.SwerveModule.GEAR_RATIO_DRIVE * Constants.SwerveModule.WHEEL_RADIUS ;
         double angle_rot = BaseStatusSignal.getLatencyCompensatedValue(_steeringPositionRotations,
                 _steeringVelocityRotationsPerSec);
 
@@ -193,10 +177,6 @@ public class SwerveModule {
         _internalState.angle = Rotation2d.fromRotations(angle_rot);
 
         return _internalState;
-    }
-
-    private double getGearRatio() {
-        return _isLowGear ? Constants.SwerveModule.GEAR_RATIO_DRIVE_LOW : Constants.SwerveModule.GEAR_RATIO_DRIVE_HIGH;
     }
 
     public BaseStatusSignal[] getSignals() {
@@ -214,7 +194,7 @@ public class SwerveModule {
     }
 
     private double calculateWantedSpeed(SwerveModuleState state) {
-        return state.speedMetersPerSecond * getGearRatio() * _rotPerMet;
+        return state.speedMetersPerSecond * Constants.SwerveModule.GEAR_RATIO_DRIVE * _rotPerMet;
     }
 
     public void setModuleState(SwerveModuleState state) {
@@ -240,17 +220,6 @@ public class SwerveModule {
         SmartDashboard.putNumber("/actualSpeed", _driveMotor.getVelocity().getValue());
         SmartDashboard.putNumber("/wantedPosition", position);
         SmartDashboard.putNumber("/cosineScalar", cosineScalar);
-    }
-    private void transformEncoderFromHighGearToLowGear() {
-        refreshSignals();
-        double currentEncoderRotations = BaseStatusSignal.getLatencyCompensatedValue(_drivePositionRotations, _driveVelocityRotationsPerSec);
-        _driveMotor.setPosition(currentEncoderRotations * Constants.SwerveModule.GEAR_RATIO_DRIVE_LOW / Constants.SwerveModule.GEAR_RATIO_DRIVE_HIGH);
-    }
-
-    private void transformEncoderFromLowGearToHighGear() {
-        refreshSignals();
-        double currentEncoderRotations = BaseStatusSignal.getLatencyCompensatedValue(_drivePositionRotations, _driveVelocityRotationsPerSec);
-        _driveMotor.setPosition(currentEncoderRotations * Constants.SwerveModule.GEAR_RATIO_DRIVE_HIGH / Constants.SwerveModule.GEAR_RATIO_DRIVE_LOW);
     }
 
     public SwerveModuleState getState() {
@@ -329,7 +298,7 @@ public class SwerveModule {
     }
 
     public double getWheelAngularVelocity() {
-        return Units.rotationsPerMinuteToRadiansPerSecond(getDriveRPM() / getGearRatio());
+        return Units.rotationsPerMinuteToRadiansPerSecond(getDriveRPM() / Constants.SwerveModule.GEAR_RATIO_DRIVE);
     }
 
     public Translation2d getModuleLocation() {
@@ -345,7 +314,7 @@ public class SwerveModule {
     }
 
     public double getDistance() {
-        return _drivePositionRotations.getValue() * (Math.PI * 2.0) / (getGearRatio());
+        return _drivePositionRotations.getValue() * (Math.PI * 2.0) / ((Constants.SwerveModule.GEAR_RATIO_DRIVE));
     }
 
     public void resetEncoders() {

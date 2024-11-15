@@ -38,15 +38,13 @@ public class Drive extends OutliersCommand {
     @Override
     public void execute() {
 
-        // _driveTrain.autoShifter();
-
         Vector2d vec = Helpers.axisToSegmentedUnitCircleRadians(
                 _oi.getDriveY(), _oi.getDriveX(), segmentationArray);
         double vx;
         double vy;
         double rot = _oi.getRotationX();
 
-        double max_mps = Constants.DriveTrain.MAX_HIGH_GEAR_MPS;
+        double max_mps = Constants.DriveTrain.MAX_MPS;
 
         rot = Math.signum(rot) * rot * rot;
 
@@ -61,18 +59,6 @@ public class Drive extends OutliersCommand {
         rot = rot * Constants.DriveTrain.MAX_ANG_VEL;
 
         Rotation2d rotation = _driveTrain.isRedAlliance() ? _driveTrain.getHeading().plus(new Rotation2d(Math.PI)) : _driveTrain.getHeading();
-        // set kinematics limits if shooting.
-        // if (_oi.isShooting()) {
-        // } else {
-        //     _driveTrain.setKinematicLimits(
-        //         _driveTrain.isLowGear() ? 
-        //         LOW_KINEMATIC_LIMITS :
-        //         HIGH_KINEMATIC_LIMITS
-        //     );
-        // }
-
-        // if has note and is within shooting range and is in speaker mode
-        
 
         if (_driveTrain.isFieldCentric()) {
             _driveTrain.setVelocity(
