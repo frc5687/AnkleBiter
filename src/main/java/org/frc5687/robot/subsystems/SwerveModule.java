@@ -40,7 +40,7 @@ public class SwerveModule {
         public double encoderOffset = 0.0;
         public boolean encoderInverted = false;
 
-        public String canBus = "CANivore";
+        public String canBus = "rio";
     }
 
     private final OutliersTalon _driveMotor;

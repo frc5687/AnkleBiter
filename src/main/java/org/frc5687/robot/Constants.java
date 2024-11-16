@@ -27,15 +27,15 @@ public class Constants {
     public static final double EPSILON = 1e-9;
 
     public static class SwerveModule {
-        public static final String CAN_BUS = "CANivore";
+        public static final String CAN_BUS = "rio";
         public static final int NUM_MODULES = 4;
 
         public static final OutliersTalon.Configuration CONFIG = new OutliersTalon.Configuration();
         public static final OutliersTalon.Configuration STEER_CONFIG = new OutliersTalon.Configuration();
 
-        public static final double WHEEL_RADIUS =  0.053975; //5/22/2025 larger wheel testing
-        public static final double GEAR_RATIO_DRIVE = (52.0 / 14.0) * (52.0 / 44.0) * (16.0 / 36.0) * (45.0 / 15.0); // 5.85
-        public static final double GEAR_RATIO_STEER = (52.0 / 14.0) * (96.0 / 16.0); // 22.2857
+        public static final double WHEEL_RADIUS =  0.0508; //11/15/2024 test
+        public static final double GEAR_RATIO_DRIVE = (54.0 / 14.0) * (18.0 / 34.0) * (45.0 / 16.0);// 6.126
+        public static final double GEAR_RATIO_STEER = (48.0 / 18.0) * (96.0 / 16.0); // 16.0
 
         // this is the motor config for the swerve motors
         static {
@@ -69,20 +69,20 @@ public class Constants {
         public static final OutliersTalon.ClosedLoopConfiguration DRIVE_CONTROLLER_CONFIG = new OutliersTalon.ClosedLoopConfiguration();
 
         static {
-            DRIVE_CONTROLLER_CONFIG.kP = 8.0;
+            DRIVE_CONTROLLER_CONFIG.kP = 0.0;
             DRIVE_CONTROLLER_CONFIG.kI = 0.0;
-            DRIVE_CONTROLLER_CONFIG.kD = 0.3;
-            //DRIVE_CONTROLLER_CONFIG.kV = 0.75;
-            DRIVE_CONTROLLER_CONFIG.kV = 1 / MAX_MPS;
+            DRIVE_CONTROLLER_CONFIG.kD = 0.0;
+            DRIVE_CONTROLLER_CONFIG.kV = 0.0;
+            //DRIVE_CONTROLLER_CONFIG.kV = 1 / MAX_MPS;
             // DRIVE_CONTROLLER_CONFIG.kS = 0.2;
         }
         public static final OutliersTalon.ClosedLoopConfiguration STEER_CONTROLLER_CONFIG = new OutliersTalon.ClosedLoopConfiguration();
 
         static {
             STEER_CONTROLLER_CONFIG.SLOT = 0;
-            STEER_CONTROLLER_CONFIG.kP = 70;
-            STEER_CONTROLLER_CONFIG.kI = 0;
-            STEER_CONTROLLER_CONFIG.kD = 0.7;
+            STEER_CONTROLLER_CONFIG.kP = -50.0;
+            STEER_CONTROLLER_CONFIG.kI = 0.0;
+            STEER_CONTROLLER_CONFIG.kD = 0.0;
             STEER_CONTROLLER_CONFIG.kV = 0.0;
 
             STEER_CONTROLLER_CONFIG.IS_CONTINUOUS = true;
@@ -111,13 +111,13 @@ public class Constants {
      * Note: when robot is flipped over, this is clockwise.
      */
     public static class DriveTrain {
-        public static final String CAN_BUS = "CANivore";
+        public static final String CAN_BUS = "rio";
         public static final int NUM_MODULES = 4;
         public static final double ROBOT_WEIGHT = Units.lbsToKilograms(120.0);
 
         // Size of the wheelbase in meters
-        public static final double WIDTH = 0.5461; // meters
-        public static final double LENGTH = 0.5461; // meters
+        public static final double WIDTH = 0.5842; // meters
+        public static final double LENGTH = 0.5842; // meters
         // Distance of swerve modules from center of robot
         public static final double SWERVE_NS_POS = LENGTH / 2.0;
         public static final double SWERVE_WE_POS = WIDTH / 2.0;
@@ -199,7 +199,7 @@ public class Constants {
             SOUTH_EAST_CONFIG.position = new Translation2d(-SWERVE_NS_POS, -SWERVE_WE_POS); // -,-
 
             SOUTH_EAST_CONFIG.encoderInverted = false;
-            SOUTH_EAST_CONFIG.encoderOffset = -0.302490234375;
+            SOUTH_EAST_CONFIG.encoderOffset = -0.27734375;
         }
 
         public static final ModuleConfiguration NORTH_EAST_CONFIG = new ModuleConfiguration();
@@ -210,7 +210,7 @@ public class Constants {
             NORTH_EAST_CONFIG.position = new Translation2d(SWERVE_NS_POS, -SWERVE_WE_POS); // +,-
 
             NORTH_EAST_CONFIG.encoderInverted = false;
-            NORTH_EAST_CONFIG.encoderOffset = -0.101806640625;
+            NORTH_EAST_CONFIG.encoderOffset = -0.056884765625;
         }
 
         public static final ModuleConfiguration NORTH_WEST_CONFIG = new ModuleConfiguration();
@@ -221,7 +221,7 @@ public class Constants {
             NORTH_WEST_CONFIG.position = new Translation2d(SWERVE_NS_POS, SWERVE_WE_POS); // +,+
 
             NORTH_WEST_CONFIG.encoderInverted = false;
-            NORTH_WEST_CONFIG.encoderOffset = -0.283447265625;
+            NORTH_WEST_CONFIG.encoderOffset = 0.3671875;
         }
 
         public static final ModuleConfiguration SOUTH_WEST_CONFIG = new ModuleConfiguration();
@@ -232,7 +232,7 @@ public class Constants {
             SOUTH_WEST_CONFIG.position = new Translation2d(-SWERVE_NS_POS, SWERVE_WE_POS); // -,+
 
             SOUTH_WEST_CONFIG.encoderInverted = false;
-            SOUTH_WEST_CONFIG.encoderOffset = -0.197998046875;
+            SOUTH_WEST_CONFIG.encoderOffset = -0.198974609375;
         }
 
         public static final double TRANSLATION_DEADBAND = 0.05; // Avoid unintentional joystick movement

@@ -60,7 +60,7 @@ public class RobotContainer extends OutliersContainer {
 
 
         // configure pigeon
-        _imu = new Pigeon2(RobotMap.CAN.PIGEON.PIGEON, "CANivore");
+        _imu = new Pigeon2(RobotMap.CAN.PIGEON.PIGEON, "rio");
         var pigeonConfig = new Pigeon2Configuration();
         _imu.getConfigurator().apply(pigeonConfig);
 
