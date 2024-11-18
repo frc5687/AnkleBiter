@@ -54,7 +54,7 @@ public class Constants {
             STEER_CONFIG.TIME_OUT = 0.5;
 
             STEER_CONFIG.NEUTRAL_MODE = NeutralModeValue.Brake;
-            STEER_CONFIG.INVERTED = InvertedValue.CounterClockwise_Positive;
+            STEER_CONFIG.INVERTED = InvertedValue.Clockwise_Positive;
 
             STEER_CONFIG.MAX_VOLTAGE = 12.0;
 
@@ -69,12 +69,11 @@ public class Constants {
         public static final OutliersTalon.ClosedLoopConfiguration DRIVE_CONTROLLER_CONFIG = new OutliersTalon.ClosedLoopConfiguration();
 
         static {
-            DRIVE_CONTROLLER_CONFIG.kP = 0.0;
+            DRIVE_CONTROLLER_CONFIG.kP = 10.0;
             DRIVE_CONTROLLER_CONFIG.kI = 0.0;
             DRIVE_CONTROLLER_CONFIG.kD = 0.0;
-            DRIVE_CONTROLLER_CONFIG.kV = 0.0;
-            //DRIVE_CONTROLLER_CONFIG.kV = 1 / MAX_MPS;
-            // DRIVE_CONTROLLER_CONFIG.kS = 0.2;
+            DRIVE_CONTROLLER_CONFIG.kV = 1 / MAX_MPS;
+            DRIVE_CONTROLLER_CONFIG.kS = 0.2;
         }
         public static final OutliersTalon.ClosedLoopConfiguration STEER_CONTROLLER_CONFIG = new OutliersTalon.ClosedLoopConfiguration();
 
@@ -198,8 +197,7 @@ public class Constants {
             SOUTH_EAST_CONFIG.canBus = CAN_BUS;
             SOUTH_EAST_CONFIG.position = new Translation2d(-SWERVE_NS_POS, -SWERVE_WE_POS); // -,-
 
-            SOUTH_EAST_CONFIG.encoderInverted = false;
-            SOUTH_EAST_CONFIG.encoderOffset = -0.27734375;
+            SOUTH_EAST_CONFIG.encoderOffset = 0.27734375;
         }
 
         public static final ModuleConfiguration NORTH_EAST_CONFIG = new ModuleConfiguration();
@@ -209,8 +207,7 @@ public class Constants {
             NORTH_EAST_CONFIG.canBus = CAN_BUS;
             NORTH_EAST_CONFIG.position = new Translation2d(SWERVE_NS_POS, -SWERVE_WE_POS); // +,-
 
-            NORTH_EAST_CONFIG.encoderInverted = false;
-            NORTH_EAST_CONFIG.encoderOffset = -0.056884765625;
+            NORTH_EAST_CONFIG.encoderOffset = 0.056884765625;
         }
 
         public static final ModuleConfiguration NORTH_WEST_CONFIG = new ModuleConfiguration();
@@ -220,8 +217,7 @@ public class Constants {
             NORTH_WEST_CONFIG.canBus = CAN_BUS;
             NORTH_WEST_CONFIG.position = new Translation2d(SWERVE_NS_POS, SWERVE_WE_POS); // +,+
 
-            NORTH_WEST_CONFIG.encoderInverted = false;
-            NORTH_WEST_CONFIG.encoderOffset = 0.3671875;
+            NORTH_WEST_CONFIG.encoderOffset = -0.3671875;
         }
 
         public static final ModuleConfiguration SOUTH_WEST_CONFIG = new ModuleConfiguration();
@@ -231,8 +227,7 @@ public class Constants {
             SOUTH_WEST_CONFIG.canBus = CAN_BUS;
             SOUTH_WEST_CONFIG.position = new Translation2d(-SWERVE_NS_POS, SWERVE_WE_POS); // -,+
 
-            SOUTH_WEST_CONFIG.encoderInverted = false;
-            SOUTH_WEST_CONFIG.encoderOffset = -0.198974609375;
+            SOUTH_WEST_CONFIG.encoderOffset = 0.198974609375;
         }
 
         public static final double TRANSLATION_DEADBAND = 0.05; // Avoid unintentional joystick movement

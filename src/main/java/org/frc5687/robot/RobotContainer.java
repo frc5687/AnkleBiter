@@ -11,6 +11,7 @@ import org.frc5687.robot.util.OutliersContainer;
 import org.frc5687.robot.util.PhotonProcessor;
 import org.frc5687.robot.util.VisionProcessor;
 
+import com.ctre.phoenix6.configs.MountPoseConfigs;
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.Pigeon2;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -48,20 +49,13 @@ public class RobotContainer extends OutliersContainer {
         Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
         Thread.currentThread().setName("Robot Thread");
         _oi = new OI();
-        // create the vision processor
-        _visionProcessor = new VisionProcessor();
-        // subscribe to a vision topic for the correct data
-        _visionProcessor.createSubscriber("Objects", "tcp://10.56.87.20:5556");
-        _visionProcessor.start();
 
         _field = new Field2d();
 
-        _photonProcessor = new PhotonProcessor(AprilTagFields.k2024Crescendo.loadAprilTagLayoutField());
-
-
         // configure pigeon
-        _imu = new Pigeon2(RobotMap.CAN.PIGEON.PIGEON, "rio");
+        _imu = new Pigeon2(RobotMap.CAN.PIGEON.PIGEON, "CANivore");
         var pigeonConfig = new Pigeon2Configuration();
+        pigeonConfig.withMountPose(new MountPoseConfigs().withMountPoseRoll(Math.PI)); // I'm not actually sure if this should be pitch or roll... if this leads to issues later on blame me (xavier)
         _imu.getConfigurator().apply(pigeonConfig);
 
         _driveTrain = new DriveTrain(this, _imu);

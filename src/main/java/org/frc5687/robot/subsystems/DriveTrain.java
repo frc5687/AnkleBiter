@@ -127,15 +127,12 @@ public class DriveTrain extends OutliersSubsystem {
 
     private boolean _fieldCentric = true;
 
-
     public DriveTrain(
             OutliersContainer container,
             Pigeon2 imu) {
         super(container);
         SignalLogger.setPath("/home/lvuser/logs");
         SignalLogger.start();
-
-        
 
         // configure our system IO and pigeon;
         _imu = imu;
@@ -180,15 +177,12 @@ public class DriveTrain extends OutliersSubsystem {
         _signals[NUM_MODULES * 4] = _imu.getYaw();
         _signals[NUM_MODULES * 4 + 1] = _imu.getPitch();
         _signals[NUM_MODULES * 4 + 2] = _imu.getRoll();
-  
 
         // frequency in Hz
         configureSignalFrequency(250);
-        // configureModuleControlFrequency(1000); 
 
         // configure startup offset
-        _yawOffset = _imu.getYaw().getValue(); 
-        readIMU();
+        zeroGyroscope();
 
         _kinematics = new SwerveDriveKinematics(
                 _modules[NORTH_WEST_IDX].getModuleLocation(),
@@ -227,8 +221,6 @@ public class DriveTrain extends OutliersSubsystem {
 
         readModules();
         setSetpointFromMeasuredModules();
-
-        // logMetrics("SE Current", "NE Current", "NW Current", "SW Current");
 
         // Configure AutoBuilder last
         AutoBuilder.configureHolonomic(
@@ -390,15 +382,9 @@ public class DriveTrain extends OutliersSubsystem {
         }
     }
 
-    public void resetModuleEncoders() {
-        for (var module : _modules) {
-            module.resetEncoders();
-        }
-    }
-
     public void setModuleStates(SwerveModuleState[] states) {
         for (int module = 0; module < _modules.length; module++) {
-            _modules[module].setIdealState(states[module]);
+            _modules[module].setModuleState(states[module]);
         }
     }
 
