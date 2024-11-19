@@ -12,7 +12,7 @@ import org.frc5687.lib.math.GeometryUtil;
 
 /**
  * This is 254s SwerveSetpointGenerator but modified to use WPILibs Geometry classes and an
- * extension to the regula falsi method using Illinios or ITP for root finding.
+ * extension to the regula falsi method using Illinois or ITP for root finding.
  */
 public class SwerveSetpointGenerator {
 
