@@ -1,14 +1,16 @@
 package org.frc5687.lib.swerve;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import org.frc5687.lib.math.GeometryUtil;
+
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import org.frc5687.lib.math.GeometryUtil;
 
 /**
  * This is 254s SwerveSetpointGenerator but modified to use WPILibs Geometry classes and an
@@ -215,6 +217,7 @@ public class SwerveSetpointGenerator {
             // It will (likely) be faster to stop the robot, rotate the modules in place to the complement
             // of the desired
             // angle, and accelerate again.
+            System.out.println("ALL MODULES FLIPPING");
             return generateSetpoint(limits, prevSetpoint, new ChassisSpeeds(), dt);
         }
 
@@ -353,6 +356,10 @@ public class SwerveSetpointGenerator {
                 retStates[i].speedMetersPerSecond *= -1.0;
             }
         }
+        System.out.println("min_s: "+String.valueOf(min_s));
+        System.out.println("vx: "+String.valueOf(retSpeeds.vxMetersPerSecond));
+        System.out.println("vy: "+String.valueOf(retSpeeds.vyMetersPerSecond));
+        System.out.println("omega: "+String.valueOf(retSpeeds.omegaRadiansPerSecond));
         return new SwerveSetpoint(retSpeeds, retStates);
     }
 }

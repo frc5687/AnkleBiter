@@ -27,10 +27,10 @@ public class Constants {
     public static final double EPSILON = 1e-9;
 
     public static class SwerveModule {
-        public static final String CAN_BUS = "rio";
+        public static final String CAN_BUS = "CANivore";
         public static final int NUM_MODULES = 4;
 
-        public static final OutliersTalon.Configuration CONFIG = new OutliersTalon.Configuration();
+        public static final OutliersTalon.Configuration DRIVE_CONFIG = new OutliersTalon.Configuration();
         public static final OutliersTalon.Configuration STEER_CONFIG = new OutliersTalon.Configuration();
 
         public static final double WHEEL_RADIUS =  0.0508; //11/15/2024 test
@@ -39,15 +39,15 @@ public class Constants {
 
         // this is the motor config for the swerve motors
         static {
-            CONFIG.TIME_OUT = 0.5;
+            DRIVE_CONFIG.TIME_OUT = 0.5;
 
-            CONFIG.NEUTRAL_MODE = NeutralModeValue.Brake;
-            CONFIG.INVERTED = InvertedValue.CounterClockwise_Positive;
+            DRIVE_CONFIG.NEUTRAL_MODE = NeutralModeValue.Brake;
+            DRIVE_CONFIG.INVERTED = InvertedValue.CounterClockwise_Positive;
 
-            CONFIG.MAX_VOLTAGE = 12.0;
+            DRIVE_CONFIG.MAX_VOLTAGE = 12.0;
 
-            CONFIG.MAX_CURRENT = 120; // Max control requeset current
-            CONFIG.CURRENT_DEADBAND = 0.1;
+            DRIVE_CONFIG.MAX_CURRENT = 120; // Max control requeset current
+            DRIVE_CONFIG.CURRENT_DEADBAND = 0.1;
         }
 
         static {
@@ -66,20 +66,21 @@ public class Constants {
             STEER_CONFIG.CURRENT_DEADBAND = 0.1;
         }
 
-        public static final OutliersTalon.ClosedLoopConfiguration DRIVE_CONTROLLER_CONFIG = new OutliersTalon.ClosedLoopConfiguration();
+        // TODO make this final again. i was tuning pid - xavier
+        public static OutliersTalon.ClosedLoopConfiguration DRIVE_CONTROLLER_CONFIG = new OutliersTalon.ClosedLoopConfiguration();
 
         static {
             DRIVE_CONTROLLER_CONFIG.kP = 10.0;
             DRIVE_CONTROLLER_CONFIG.kI = 0.0;
             DRIVE_CONTROLLER_CONFIG.kD = 0.0;
-            DRIVE_CONTROLLER_CONFIG.kV = 1 / MAX_MPS;
-            DRIVE_CONTROLLER_CONFIG.kS = 0.2;
+            DRIVE_CONTROLLER_CONFIG.kV = 0.15;
+            DRIVE_CONTROLLER_CONFIG.kS = 3;
         }
         public static final OutliersTalon.ClosedLoopConfiguration STEER_CONTROLLER_CONFIG = new OutliersTalon.ClosedLoopConfiguration();
 
         static {
             STEER_CONTROLLER_CONFIG.SLOT = 0;
-            STEER_CONTROLLER_CONFIG.kP = -50.0;
+            STEER_CONTROLLER_CONFIG.kP = -50.0; // FIXME
             STEER_CONTROLLER_CONFIG.kI = 0.0;
             STEER_CONTROLLER_CONFIG.kD = 0.0;
             STEER_CONTROLLER_CONFIG.kV = 0.0;
@@ -110,7 +111,7 @@ public class Constants {
      * Note: when robot is flipped over, this is clockwise.
      */
     public static class DriveTrain {
-        public static final String CAN_BUS = "rio";
+        public static final String CAN_BUS = "CANivore";
         public static final int NUM_MODULES = 4;
         public static final double ROBOT_WEIGHT = Units.lbsToKilograms(120.0);
 
@@ -134,50 +135,15 @@ public class Constants {
         public static final double MAX_MPSS = 
             (MAX_KRAKEN_FOC_TORQUE * 4 * SwerveModule.GEAR_RATIO_DRIVE) / (ROBOT_WEIGHT * SwerveModule.WHEEL_RADIUS);
 
-        public static final double CRAWL_MPS = 1.0;
-
-        public static final double SLOW_MPS = 2.0; // Slow speed of robot (m/s)
         public static final double MAX_ANG_VEL = 2.0 * Math.PI; // Max rotation rate of robot (rads/s)
-
-        public static final double FAST_MAX_ANG_VEL = 4.0 * Math.PI; // Max rotation rate of robot (rads/s)
-
         public static final double MAX_ANG_ACC = 2.0 * Math.PI; // Max angular acceleration of robot (rads/s^2)
-        public static final double SLOW_ANG_VEL = Math.PI; // Max rotation rate of robot (rads/s)
-
-        public static final double MIN_TRANSLATION_COMMAND = 0.1; // mps
-        public static final double YAW_RATE_THRESHOLD = 0.05; // rad / s
-
-        public static final KinematicLimits AUTO_KINEMATIC_LIMITS = new KinematicLimits();
 
         public static final KinematicLimits KINEMATIC_LIMITS = new KinematicLimits();
 
         static {
-            KINEMATIC_LIMITS.maxDriveVelocity = MAX_MPS; // m/s
-            KINEMATIC_LIMITS.maxDriveAcceleration = Double.MAX_VALUE; // m/s^2 
-            KINEMATIC_LIMITS.maxSteeringVelocity = Double.MAX_VALUE; // rad/s
-        }
-
-        // Just unlimite everything, assume the path will handle everything.
-        static {
-            AUTO_KINEMATIC_LIMITS.maxDriveVelocity = MAX_MPS; // m/s
-            AUTO_KINEMATIC_LIMITS.maxDriveAcceleration = 200; // m/s^2 old 20, new based on math :) 
-            AUTO_KINEMATIC_LIMITS.maxSteeringVelocity = 200; // rad/s
-        }
-
-        public static final KinematicLimits SLOW_KINEMATIC_LIMITS = new KinematicLimits();
-
-        static {
-            SLOW_KINEMATIC_LIMITS.maxDriveVelocity = 2.5; // m/s
-            SLOW_KINEMATIC_LIMITS.maxDriveAcceleration = 10; // m/s^2
-            SLOW_KINEMATIC_LIMITS.maxSteeringVelocity = 10; // rad/s
-        }
-
-        public static final KinematicLimits SLOW_MODE_KINEMATIC_LIMITS = new KinematicLimits();
-
-        static {
-            SLOW_MODE_KINEMATIC_LIMITS.maxDriveVelocity = 2.0; // m/s
-            SLOW_MODE_KINEMATIC_LIMITS.maxDriveAcceleration = Double.MAX_VALUE; // m/s^2
-            SLOW_MODE_KINEMATIC_LIMITS.maxSteeringVelocity = Double.MAX_VALUE; // rad/s
+            KINEMATIC_LIMITS.maxDriveVelocity = 7; // m/s
+            KINEMATIC_LIMITS.maxDriveAcceleration = 0.1; // m/s^2 
+            KINEMATIC_LIMITS.maxSteeringVelocity = 10; // rad/s
         }
 
         /*

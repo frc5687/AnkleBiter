@@ -1,6 +1,7 @@
 /* Team 5687  */
 package org.frc5687.robot.subsystems;
 
+import static org.frc5687.robot.Constants.SwerveModule.DRIVE_CONTROLLER_CONFIG;
 import static org.frc5687.robot.Constants.SwerveModule.WHEEL_RADIUS;
 import org.frc5687.lib.drivers.OutliersTalon;
 import org.frc5687.robot.Constants;
@@ -51,12 +52,10 @@ public class SwerveModule {
 
     private SwerveModulePosition _internalState = new SwerveModulePosition();
 
-    private double _rotPerMet;
+    private final double _rotPerMet;
 
-    private String _moduleName;
-
+    private final String _moduleName;
     private SwerveModuleState _goalState;
-
 
     public SwerveModule(
             SwerveModule.ModuleConfiguration config,
@@ -71,7 +70,7 @@ public class SwerveModule {
         _angleTorque = new MotionMagicTorqueCurrentFOC(0).withOverrideCoastDurNeutral(true);
         /* Motor Setup */
         _driveMotor = new OutliersTalon(driveMotorID, config.canBus, "Drive");
-        _driveMotor.configure(Constants.SwerveModule.CONFIG);
+        _driveMotor.configure(Constants.SwerveModule.DRIVE_CONFIG);
         _driveMotor.configureClosedLoop(Constants.SwerveModule.DRIVE_CONTROLLER_CONFIG);
 
         _steeringMotor = new OutliersTalon(steeringMotorID, config.canBus, "Steer");
@@ -110,11 +109,11 @@ public class SwerveModule {
         _steeringPositionRotations = _encoder.getPosition();
         _steeringVelocityRotationsPerSec = _encoder.getVelocity();
 
-        _driveMotor.getFault_Hardware().setUpdateFrequency(4, 0.04);
+        _driveMotor.getFault_Hardware().setUpdateFrequency(4, 0.04); // not sure if this is used?? - xavier
         _driveVelocityRotationsPerSec.setUpdateFrequency(1 / 250);
         _drivePositionRotations.setUpdateFrequency(1 / 250);
 
-        _steeringMotor.getFault_Hardware().setUpdateFrequency(4, 0.04);
+        _steeringMotor.getFault_Hardware().setUpdateFrequency(4, 0.04); // not sure if this is used?? - xavier
         _steeringVelocityRotationsPerSec.setUpdateFrequency(1 / 250);
         _steeringPositionRotations.setUpdateFrequency(1 / 250);
 
@@ -130,14 +129,26 @@ public class SwerveModule {
         _angleTorqueExpo.UpdateFreqHz = updateFreqHz;
     }
 
-    public void refreshSignals() {
-        _drivePositionRotations.refresh();
-        _driveVelocityRotationsPerSec.refresh();
-        _steeringPositionRotations.refresh();
-        _steeringVelocityRotationsPerSec.refresh();
+    public void setGoalState(SwerveModuleState state) {
+        // optimize goal state
+        Rotation2d currentAngle = getCanCoderAngle();
+        SwerveModuleState optimizedState = SwerveModuleState.optimize(state, currentAngle);
+        // https://docs.wpilib.org/en/stable/docs/software/kinematics-and-odometry/swerve-drive-kinematics.html#cosine-compensation
+        optimizedState.speedMetersPerSecond *= optimizedState.angle.minus(currentAngle).getCos();
+        _goalState = optimizedState;
+
+        // send motor setpoints
+        _driveMotor.configureClosedLoop(DRIVE_CONTROLLER_CONFIG);
+        _driveMotor.setControl(_velocityTorqueCurrentFOC.withVelocity(optimizedState.speedMetersPerSecond * Constants.SwerveModule.GEAR_RATIO_DRIVE * _rotPerMet));
+        _steeringMotor.setPositionVoltage(state.angle.getRotations());
     }
 
-    private SwerveModulePosition calculatePosition() {
+    public SwerveModuleState getState() {
+        return new SwerveModuleState(getWheelVelocityMetersPerSecond(), getCanCoderAngle());
+    }
+
+    public SwerveModulePosition getPosition() {
+        BaseStatusSignal.refreshAll(_drivePositionRotations, _driveVelocityRotationsPerSec, _steeringPositionRotations, _steeringVelocityRotationsPerSec);
         double currentEncoderRotations = BaseStatusSignal.getLatencyCompensatedValue(_drivePositionRotations, _driveVelocityRotationsPerSec);
         double distanceMeters = currentEncoderRotations * 2.0 * Math.PI / Constants.SwerveModule.GEAR_RATIO_DRIVE * Constants.SwerveModule.WHEEL_RADIUS ;
         double angle_rot = BaseStatusSignal.getLatencyCompensatedValue(_steeringPositionRotations, _steeringVelocityRotationsPerSec);
@@ -148,29 +159,8 @@ public class SwerveModule {
         return _internalState;
     }
 
-    public BaseStatusSignal[] getSignals() {
-        return _signals;
-    }
-
-    public void setModuleState(SwerveModuleState state) {
-        Rotation2d currentAngle = getCanCoderAngle();
-        SwerveModuleState optimizedState = SwerveModuleState.optimize(state, currentAngle);
-        // https://docs.wpilib.org/en/stable/docs/software/kinematics-and-odometry/swerve-drive-kinematics.html#cosine-compensation
-        optimizedState.speedMetersPerSecond *= optimizedState.angle.minus(currentAngle).getCos();
-
-        _goalState = optimizedState;
-
-        double position = state.angle.getRotations();
-
-        _driveMotor.setControl(_velocityTorqueCurrentFOC.withVelocity(optimizedState.speedMetersPerSecond * Constants.SwerveModule.GEAR_RATIO_DRIVE * _rotPerMet));
-        _steeringMotor.setPositionVoltage(position);
-    }
-
-    public SwerveModuleState getState() {
-        return new SwerveModuleState(getWheelVelocity(), getCanCoderAngle());
-    }
-
-    public Rotation2d getCanCoderAngle() {
+    private Rotation2d getCanCoderAngle() {
+        _steeringPositionRotations.refresh();
         return Rotation2d.fromRotations(_encoder.getAbsolutePosition().getValue());
     }
 
@@ -182,7 +172,7 @@ public class SwerveModule {
         return OutliersTalon.rotationsPerSecToRPM(_steeringVelocityRotationsPerSec.getValue(), 1.0);
     }
 
-    public double getWheelVelocity() {
+    public double getWheelVelocityMetersPerSecond() {
         return getWheelAngularVelocity() * Constants.SwerveModule.WHEEL_RADIUS;
     }
 
@@ -194,10 +184,6 @@ public class SwerveModule {
         return _modulePosition;
     }
 
-    public SwerveModulePosition getPosition() {
-        return calculatePosition();
-    }
-
     public double getWheelDistanceMeters() {
         return getWheelDistanceRadians() * WHEEL_RADIUS;
     }
@@ -206,20 +192,14 @@ public class SwerveModule {
         return _drivePositionRotations.getValue() * (Math.PI * 2.0) / (Constants.SwerveModule.GEAR_RATIO_DRIVE);
     }
 
+    public BaseStatusSignal[] getSignals() {
+        return _signals;
+    }
+
     public void updateDashboard() {
-        // SmartDashboard.putNumber(_moduleName + "/driveRPM", getDriveRPM());
-
-        // SmartDashboard.putNumber(_moduleName + "/wheelVelocity", getWheelVelocity());
-        // SmartDashboard.putNumber(_moduleName + "/wheelAngularVelocity", getWheelAngularVelocity());
-        // SmartDashboard.putNumber(_moduleName + "/driveVoltage", _driveMotor.getSupplyVoltage().getValue());
-        // SmartDashboard.putNumber(_moduleName + "/steerVoltage", _steeringMotor.getSupplyVoltage().getValue());
-
-        // SmartDashboard.putNumber(_moduleName + "/driveSupplyCurrent", _driveMotor.getSupplyCurrent().getValue());
-        // SmartDashboard.putNumber(_moduleName + "/steerSupplyCurrent", _steeringMotor.getSupplyCurrent().getValue());
-
-        // SmartDashboard.putNumber(_moduleName + "/drivePosition", _drivePositionRotations.getValue());
-        // SmartDashboard.putNumber(_moduleName + "/wheelDistanceMeters", getWheelDistanceMeters());
         SmartDashboard.putNumber(_moduleName + "/goalSteerAngleRadians", _goalState.angle.getRadians());
         SmartDashboard.putNumber(_moduleName + "/steerAngleRadians", _internalState.angle.getRadians());
+        SmartDashboard.putNumber(_moduleName + "/goalSpeedMetersPerSecond", _goalState.speedMetersPerSecond);
+        SmartDashboard.putNumber(_moduleName + "/speedMetersPerSecond", getWheelVelocityMetersPerSecond());
     }
 }

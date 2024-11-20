@@ -181,9 +181,6 @@ public class DriveTrain extends OutliersSubsystem {
         // frequency in Hz
         configureSignalFrequency(250);
 
-        // configure startup offset
-        zeroGyroscope();
-
         _kinematics = new SwerveDriveKinematics(
                 _modules[NORTH_WEST_IDX].getModuleLocation(),
                 _modules[SOUTH_WEST_IDX].getModuleLocation(),
@@ -236,15 +233,15 @@ public class DriveTrain extends OutliersSubsystem {
                         new ReplanningConfig() // Default path replanning config. See the API for the options here
                 ),
                 () -> {
-                // Boolean supplier that controls when the path will be mirrored for the red alliance
-                // This will flip the path being followed to the red side of the field.
-                // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+                    // Boolean supplier that controls when the path will be mirrored for the red alliance
+                    // This will flip the path being followed to the red side of the field.
+                    // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
 
-                var alliance = DriverStation.getAlliance();
-                if (alliance.isPresent()) {
-                    return alliance.get() == DriverStation.Alliance.Red;
-                }
-                return false;
+                    var alliance = DriverStation.getAlliance();
+                    if (alliance.isPresent()) {
+                        return alliance.get() == DriverStation.Alliance.Red;
+                    }
+                    return false;
                 },
                 this // Reference to this subsystem to set requirements
         );
@@ -384,7 +381,7 @@ public class DriveTrain extends OutliersSubsystem {
 
     public void setModuleStates(SwerveModuleState[] states) {
         for (int module = 0; module < _modules.length; module++) {
-            _modules[module].setModuleState(states[module]);
+            _modules[module].setGoalState(states[module]);
         }
     }
 
@@ -411,9 +408,7 @@ public class DriveTrain extends OutliersSubsystem {
 
     /* Kinematic limit for the Setpoint Generator */
     public void setKinematicLimits(KinematicLimits limits) {
-        if (limits != _kinematicLimits) {
-            _kinematicLimits = limits;
-        }
+        _kinematicLimits = limits;
     }
 
     public KinematicLimits getKinematicLimits() {
@@ -425,12 +420,7 @@ public class DriveTrain extends OutliersSubsystem {
     public void updateDashboard() {
         metric("Swerve State", _controlState.name());
         metric("Current Heading", getHeading().getRadians());
-        // metric("Tank Pressure PSI", _compressor.getPressure());
         metric("Current Command", getCurrentCommand() != null ? getCurrentCommand().getName() : "no command");
-        moduleMetrics();
-    }
-
-    public void moduleMetrics() {
         for (var module : _modules) {
             module.updateDashboard();
         }
