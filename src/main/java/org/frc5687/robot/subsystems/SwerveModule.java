@@ -140,7 +140,7 @@ public class SwerveModule {
         // send motor setpoints
         _driveMotor.configureClosedLoop(DRIVE_CONTROLLER_CONFIG);
         _driveMotor.setControl(_velocityTorqueCurrentFOC.withVelocity(optimizedState.speedMetersPerSecond * Constants.SwerveModule.GEAR_RATIO_DRIVE * _rotPerMet));
-        _steeringMotor.setPositionVoltage(state.angle.getRotations());
+        _steeringMotor.setPositionVoltage(optimizedState.angle.getRotations());
     }
 
     public SwerveModuleState getState() {

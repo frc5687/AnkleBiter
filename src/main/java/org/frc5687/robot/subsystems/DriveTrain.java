@@ -102,7 +102,7 @@ public class DriveTrain extends OutliersSubsystem {
     private static final int SOUTH_EAST_IDX = 2;
     private static final int NORTH_EAST_IDX = 3;
 
-    private final SwerveSetpointGenerator _swerveSetpointGenerator;
+    // private final SwerveSetpointGenerator _swerveSetpointGenerator;
     private KinematicLimits _kinematicLimits = KINEMATIC_LIMITS;
 
     private final BaseStatusSignal[] _signals;
@@ -187,14 +187,14 @@ public class DriveTrain extends OutliersSubsystem {
                 _modules[SOUTH_EAST_IDX].getModuleLocation(),
                 _modules[NORTH_EAST_IDX].getModuleLocation());
 
-        _swerveSetpointGenerator = new SwerveSetpointGenerator(
-                _kinematics,
-                new Translation2d[] {
-                        _modules[NORTH_WEST_IDX].getModuleLocation(),
-                        _modules[SOUTH_WEST_IDX].getModuleLocation(),
-                        _modules[SOUTH_EAST_IDX].getModuleLocation(),
-                        _modules[NORTH_EAST_IDX].getModuleLocation()
-                });
+        // _swerveSetpointGenerator = new SwerveSetpointGenerator(
+        //         _kinematics,
+        //         new Translation2d[] {
+        //                 _modules[NORTH_WEST_IDX].getModuleLocation(),
+        //                 _modules[SOUTH_WEST_IDX].getModuleLocation(),
+        //                 _modules[SOUTH_EAST_IDX].getModuleLocation(),
+        //                 _modules[NORTH_EAST_IDX].getModuleLocation()
+        //         });
 
         _headingController = new SwerveHeadingController(Constants.UPDATE_PERIOD);
 
@@ -364,11 +364,19 @@ public class DriveTrain extends OutliersSubsystem {
                 twistVel.dy / Constants.UPDATE_PERIOD,
                 twistVel.dtheta / Constants.UPDATE_PERIOD);
 
-        _systemIO.setpoint = _swerveSetpointGenerator.generateSetpoint(
-                _kinematicLimits,
-                _systemIO.setpoint,
-                updatedChassisSpeeds,
-                Constants.UPDATE_PERIOD);
+        // _systemIO.setpoint = _swerveSetpointGenerator.generateSetpoint(
+        //         _kinematicLimits,
+        //         _systemIO.setpoint,
+        //         updatedChassisSpeeds,
+        //         Constants.UPDATE_PERIOD);
+        metric("commandedVX", updatedChassisSpeeds.vxMetersPerSecond );
+        metric("commandedVY", updatedChassisSpeeds.vyMetersPerSecond );
+        metric("commandedOmega", updatedChassisSpeeds.omegaRadiansPerSecond);
+        _systemIO.setpoint = new SwerveSetpoint(updatedChassisSpeeds, _kinematics.toSwerveModuleStates(updatedChassisSpeeds));
+        ChassisSpeeds actualSpeeds = _kinematics.toChassisSpeeds(_systemIO.measuredStates);
+        metric("actualVX", actualSpeeds.vxMetersPerSecond );
+        metric("actualVY", actualSpeeds.vyMetersPerSecond );
+        metric("actualOmega", actualSpeeds.omegaRadiansPerSecond);
     }
 
     /* Module Control Start */
