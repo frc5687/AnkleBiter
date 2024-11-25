@@ -38,6 +38,17 @@ public class SwerveSetpointGenerator {
         return (a - EPSILON <= b) && (a + EPSILON >= b);
     }
 
+    /**
+
+     * Check if it would be faster to go to the opposite of the goal heading (and reverse drive direction).
+
+     *
+
+     * @param prevToGoal The rotation from the previous state to the goal state (i.e. prev.inverse().rotateBy(goal)).
+
+     * @return True if the shortest path to achieve this rotation involves flipping the drive direction.
+
+     */
     private boolean flipHeading(Rotation2d prevToGoal) {
         return Math.abs(prevToGoal.getRadians()) > Math.PI / 2.0;
     }
@@ -166,7 +177,7 @@ public class SwerveSetpointGenerator {
         // Special case: desiredState is a complete stop. In this case, module angle is arbitrary, so
         // just use the previous angle.
         boolean need_to_steer = true;
-        if (GeometryUtil.toTwist2d(desiredState).equals(GeometryUtil.IDENTITY)) {
+        if (GeometryUtil.toTwist2d(desiredState).equals(GeometryUtil.IDENTITY)) { // FIXME epsilonEquals might be required here.
             need_to_steer = false;
             for (int i = 0; i < modules.length; ++i) {
                 desiredModuleState[i].angle = prevSetpoint.moduleStates[i].angle;
@@ -183,28 +194,22 @@ public class SwerveSetpointGenerator {
         Rotation2d[] desired_heading = new Rotation2d[modules.length];
         boolean all_modules_should_flip = true;
         for (int i = 0; i < modules.length; ++i) {
-            prev_vx[i] =
-                    prevSetpoint.moduleStates[i].angle.getCos()
-                            * prevSetpoint.moduleStates[i].speedMetersPerSecond;
-            prev_vy[i] =
-                    prevSetpoint.moduleStates[i].angle.getSin()
-                            * prevSetpoint.moduleStates[i].speedMetersPerSecond;
+            prev_vx[i] = prevSetpoint.moduleStates[i].angle.getCos() * prevSetpoint.moduleStates[i].speedMetersPerSecond;
+            prev_vy[i] = prevSetpoint.moduleStates[i].angle.getSin() * prevSetpoint.moduleStates[i].speedMetersPerSecond;
             prev_heading[i] = prevSetpoint.moduleStates[i].angle;
             if (prevSetpoint.moduleStates[i].speedMetersPerSecond < 0.0) {
                 prev_heading[i] = GeometryUtil.flip(prev_heading[i]);
             }
-            desired_vx[i] =
-                    desiredModuleState[i].angle.getCos() * desiredModuleState[i].speedMetersPerSecond;
-            desired_vy[i] =
-                    desiredModuleState[i].angle.getSin() * desiredModuleState[i].speedMetersPerSecond;
+            
+            desired_vx[i] = desiredModuleState[i].angle.getCos() * desiredModuleState[i].speedMetersPerSecond;
+            desired_vy[i] = desiredModuleState[i].angle.getSin() * desiredModuleState[i].speedMetersPerSecond;
             desired_heading[i] = desiredModuleState[i].angle;
             if (desiredModuleState[i].speedMetersPerSecond < 0.0) {
                 desired_heading[i] = GeometryUtil.flip(desired_heading[i]);
             }
+
             if (all_modules_should_flip) {
-                double required_rotation_rad =
-                        Math.abs(
-                                GeometryUtil.inverse(prev_heading[i]).rotateBy(desired_heading[i]).getRadians());
+                double required_rotation_rad = Math.abs(GeometryUtil.inverse(prev_heading[i]).rotateBy(desired_heading[i]).getRadians());
                 if (required_rotation_rad < Math.PI / 2.0) {
                     all_modules_should_flip = false;
                 }
@@ -212,8 +217,8 @@ public class SwerveSetpointGenerator {
         }
 
         if (all_modules_should_flip
-                && !GeometryUtil.toTwist2d(prevSetpoint.chassisSpeeds).equals(GeometryUtil.IDENTITY)
-                && !GeometryUtil.toTwist2d(desiredState).equals(GeometryUtil.IDENTITY)) {
+                && !GeometryUtil.toTwist2d(prevSetpoint.chassisSpeeds).equals(GeometryUtil.IDENTITY) // FIXME epsilonEquals might be required here.
+                && !GeometryUtil.toTwist2d(desiredState).equals(GeometryUtil.IDENTITY)) { // FIXME epsilonEquals might be required here.
             // It will (likely) be faster to stop the robot, rotate the modules in place to the complement
             // of the desired
             // angle, and accelerate again.
@@ -356,10 +361,10 @@ public class SwerveSetpointGenerator {
                 retStates[i].speedMetersPerSecond *= -1.0;
             }
         }
-        System.out.println("min_s: "+String.valueOf(min_s));
-        System.out.println("vx: "+String.valueOf(retSpeeds.vxMetersPerSecond));
-        System.out.println("vy: "+String.valueOf(retSpeeds.vyMetersPerSecond));
-        System.out.println("omega: "+String.valueOf(retSpeeds.omegaRadiansPerSecond));
+        // System.out.println("min_s: "+String.valueOf(min_s));
+        // System.out.println("vx: "+String.valueOf(retSpeeds.vxMetersPerSecond));
+        // System.out.println("vy: "+String.valueOf(retSpeeds.vyMetersPerSecond));
+        // System.out.println("omega: "+String.valueOf(retSpeeds.omegaRadiansPerSecond));
         return new SwerveSetpoint(retSpeeds, retStates);
     }
 }

@@ -1,22 +1,13 @@
 /* Team 5687 (C)2020-2022 */
 package org.frc5687.robot;
 
-import static org.frc5687.robot.Constants.DriveTrain.MAX_MPS;
-
-import org.frc5687.lib.cheesystuff.InterpolatingDouble;
-import org.frc5687.lib.cheesystuff.InterpolatingTreeMap;
 import org.frc5687.lib.drivers.OutliersTalon;
-import org.frc5687.lib.drivers.OutliersTalon.ClosedLoopConfiguration;
 import org.frc5687.lib.swerve.SwerveSetpointGenerator.KinematicLimits;
 import org.frc5687.robot.subsystems.SwerveModule.ModuleConfiguration;
 
-import com.ctre.phoenix.led.TwinkleAnimation.TwinklePercent;
-import com.ctre.phoenix.led.TwinkleOffAnimation.TwinkleOffPercent;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 
@@ -198,17 +189,15 @@ public class Constants {
 
         public static final double TRANSLATION_DEADBAND = 0.05; // Avoid unintentional joystick movement
         public static final double ROTATION_DEADBAND = 0.05; // Avoid unintentional joystick movement
-        public static final long DISABLE_TIME = 500; // ms
-
-        public static final double LINEAR_VELOCITY_REFERENCE = 0.5;
+        public static final long DISABLE_TIME = 100; // ms
 
         // Maximum rates of motion
         public static final double POLE_THRESHOLD = Units.degreesToRadians(5.0);
 
         // PID controller settings
-        public static final double HEADING_kP = 4.8;
+        public static final double HEADING_kP = 10.0;
         public static final double HEADING_kI = 0.0;
-        public static final double HEADING_kD = 0.3;
+        public static final double HEADING_kD = 0.7;
 
         public static final double SNAP_TOLERANCE = Units.degreesToRadians(1.5);
         public static final double TARGET_TOLERANCE = Units.degreesToRadians(1);
@@ -219,12 +208,7 @@ public class Constants {
         public static final double kD = 0.05;
 
         public static final double POSITION_TOLERANCE = 0.01;
-        public static final double LEVEL_TOLERANCE = 0.5;
         public static final double HEADING_TOLERANCE = 0.04; // rad
-        public static final double BUMP_DEGREES = 7;
-
-        public static final double MIN_PSI = 80.0;
-        public static final double MAX_PSI = 120.0;
     }
 
     public static class Vision {

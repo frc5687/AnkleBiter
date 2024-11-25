@@ -6,7 +6,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.frc5687.robot.subsystems.DriveTrain;
-import org.frc5687.robot.util.VisionProcessor;
 
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
@@ -31,7 +30,6 @@ public class RobotState {
     private final Lock writeLock = stateLock.writeLock();
 
     private DriveTrain _driveTrain;
-//     private VisionProcessor _visionProcessor;
     private SwerveDrivePoseEstimator _poseEstimator;
 
     private static RobotState _instance;
@@ -47,7 +45,7 @@ public class RobotState {
         return _instance;
     }
 
-    public void initializeRobotState(DriveTrain driveTrain,  VisionProcessor visionProcessor) {
+    public void initializeRobotState(DriveTrain driveTrain) {
         _driveTrain = driveTrain;
         // _photonProcessor = photonProcessor;
         _lastTimestamp = Timer.getFPGATimestamp();

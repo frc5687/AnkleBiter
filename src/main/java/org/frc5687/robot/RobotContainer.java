@@ -9,7 +9,6 @@ import org.frc5687.robot.subsystems.DriveTrain;
 import org.frc5687.robot.subsystems.OutliersSubsystem;
 import org.frc5687.robot.util.OutliersContainer;
 import org.frc5687.robot.util.PhotonProcessor;
-import org.frc5687.robot.util.VisionProcessor;
 
 import com.ctre.phoenix6.configs.MountPoseConfigs;
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
@@ -29,7 +28,6 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 public class RobotContainer extends OutliersContainer {
     private OI _oi;
     private SendableChooser<Command> _autoChooser;
-    private VisionProcessor _visionProcessor;
     private Pigeon2 _imu;
     private Robot _robot;
     private DriveTrain _driveTrain;
@@ -61,7 +59,7 @@ public class RobotContainer extends OutliersContainer {
         _driveTrain = new DriveTrain(this, _imu);
 
         // Grab instance such that we can initalize with drivetrain and processor
-        _robotState.initializeRobotState(_driveTrain, _visionProcessor);
+        _robotState.initializeRobotState(_driveTrain);
 
         setDefaultCommand(_driveTrain, new Drive(_driveTrain, _oi));
 
@@ -71,7 +69,7 @@ public class RobotContainer extends OutliersContainer {
         SmartDashboard.putData(_field);
         SmartDashboard.putData("Auto Chooser", _autoChooser);
 
-        _oi.initializeButtons(_driveTrain, _visionProcessor, _robotState);
+        _oi.initializeButtons(_driveTrain, _robotState);
 
         PPHolonomicDriveController.setRotationTargetOverride(this::getRotationTargetOverride);
     }

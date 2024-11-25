@@ -9,7 +9,6 @@ import org.frc5687.robot.commands.DriveTrain.SnapTo;
 import org.frc5687.robot.commands.DriveTrain.ZeroIMU;
 import org.frc5687.robot.subsystems.DriveTrain;
 import org.frc5687.robot.util.OutliersProxy;
-import org.frc5687.robot.util.VisionProcessor;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -62,7 +61,6 @@ public class OI extends OutliersProxy {
 
     public void initializeButtons(
             DriveTrain drivetrain,
-            VisionProcessor visionProcessor,
             RobotState robotState) {
 
         _driverGamepad.getYButton().onTrue(new SnapTo(drivetrain, new Rotation2d(0)));

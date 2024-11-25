@@ -65,18 +65,14 @@ public class SwerveHeadingController {
      */
     public double getRotationCorrection(Rotation2d heading) {
         double power = 0;
-        switch (_headingState) {
-            case TEMPORARY_DISABLE:
-                _targetHeading = heading;
-                if (System.currentTimeMillis() > _disableTime) {
-                    _headingState = HeadingState.ON;
-                }
-            break;
-            case ON:
-                power = _PIDController.calculate(heading.getRadians(), _targetHeading.getRadians());
-                break;
-            default:
-                break;
+        if (_headingState == HeadingState.TEMPORARY_DISABLE) {
+            _targetHeading = heading;
+            if (System.currentTimeMillis() > _disableTime) {
+                _headingState = HeadingState.ON;
+            }
+        }
+        if (_headingState == HeadingState.ON) {
+            power = _PIDController.calculate(heading.getRadians(), _targetHeading.getRadians());
         }
         if (Math.abs(heading.minus(_targetHeading).getRadians())
                 < Units.degreesToRadians(1.0)) {

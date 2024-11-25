@@ -31,7 +31,6 @@ public class SnapTo extends OutliersCommand {
 
     @Override
     public void end(boolean interrupted) {
-        error(" finished");
         super.end(interrupted);
     }
 }
