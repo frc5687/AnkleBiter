@@ -88,7 +88,7 @@ public class SwerveSetpointGenerator {
         } else if (epsilonEquals(f_1, 0)) {
             return 1.0;
         } else if (iterations_left < 0) {
-            System.out.println("Failed to reach target error "+EPSILON+", error was "+(f_1-f_0));
+            System.err.println("Failed to reach target error "+EPSILON+", error was "+(f_1-f_0));
             return 0.5;
         }
         if (Math.signum(f_0) == Math.signum(f_1)) {
