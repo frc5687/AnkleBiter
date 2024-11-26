@@ -26,7 +26,7 @@ public class SwerveSetpointGenerator {
 
     private final SwerveDriveKinematics _kinematics;
     private final Translation2d[] _modulePositions;
-    private final double EPSILON = 1e-9;
+    private static final double EPSILON = 1e-9;
 
     public SwerveSetpointGenerator(
             final SwerveDriveKinematics kinematics, final Translation2d[] modulePositions) {
@@ -34,7 +34,7 @@ public class SwerveSetpointGenerator {
         _kinematics = kinematics;
     }
 
-    protected boolean epsilonEquals(double a, double b) {
+    protected static boolean epsilonEquals(double a, double b) {
         return (a - EPSILON <= b) && (a + EPSILON >= b);
     }
 
@@ -65,48 +65,70 @@ public class SwerveSetpointGenerator {
     }
 
     @FunctionalInterface
-    private interface Function2d {
+    public interface Function2d {
         double f(double x, double y);
     }
 
-    private double findRootRegula(
+    private static double findRootRegula(
             Function2d func,
             double x_0,
             double y_0,
-            double f_0,
             double x_1,
             double y_1,
-            double f_1,
             int iterations_left) {
-        if (iterations_left < 0 || epsilonEquals(f_0, f_1)) {
+        // usage example: 
+        // Function2d func = (x, y) -> Math.hypot(x, y) - offset; // returns the amount faster than the max speed that a vx and vy are
+        // findRoot(func, x_0, y_0, f_0 - offset, x_1, y_1, f_1 - offset, max_iterations);
+        double f_0 = func.f(x_0, y_0);
+        double f_1 = func.f(x_1, y_1);
+        // System.out.println("x_0 = "+x_0+", y_0 = "+y_0+", f_0 = "+f_0);
+        // System.out.println("x_1 = "+x_1+", y_1 = "+y_1+", f_1 = "+f_1);
+        if (epsilonEquals(f_0, 0)) {
+            return 0.0;
+        } else if (epsilonEquals(f_1, 0)) {
             return 1.0;
+        } else if (iterations_left < 0) {
+            System.out.println("Failed to reach target error "+EPSILON+", error was "+(f_1-f_0));
+            return 0.5;
         }
+        if (Math.signum(f_0) == Math.signum(f_1)) {
+            System.err.println("Cannot find root if f_0 and f_1 have the same sign. f_0 = "+f_0+" and f_1 = "+f_1);
+        }
+        
         var s_guess = Math.max(0.0, Math.min(1.0, -f_0 / (f_1 - f_0)));
+        // System.out.println("s_guess = "+s_guess+", -f_0 / (f_1 - f_0) = "+(-f_0 / (f_1 - f_0)));
         var x_guess = (x_1 - x_0) * s_guess + x_0;
         var y_guess = (y_1 - y_0) * s_guess + y_0;
         var f_guess = func.f(x_guess, y_guess);
         if (Math.signum(f_0) == Math.signum(f_guess)) {
             // 0 and guess on same side of root, so use upper bracket.
             return s_guess
-                    + (1.0 - s_guess)
-                            * findRootRegula(func, x_guess, y_guess, f_guess, x_1, y_1, f_1, iterations_left - 1);
+                    + (1.0 - s_guess) * findRootRegula(func, x_guess, y_guess, x_1, y_1, iterations_left - 1);
         } else {
             // Use lower bracket.
-            return s_guess
-                    * findRootRegula(func, x_0, y_0, f_0, x_guess, y_guess, f_guess, iterations_left - 1);
+            return s_guess * findRootRegula(func, x_0, y_0, x_guess, y_guess, iterations_left - 1);
         }
     }
 
-    private double findRoot(
+    /**
+     * @param func
+     * @param x_0
+     * @param y_0
+     * @param f_0 the amount it can accelerate (+- max_vel_step)
+     * @param x_1
+     * @param y_1
+     * @param f_1
+     * @param iterations_left
+     * @return
+     */
+    public static double findRoot(
             Function2d func,
             double x_0,
             double y_0,
-            double f_0,
             double x_1,
             double y_1,
-            double f_1,
             int iterations_left) {
-        return findRootRegula(func, x_0, y_0, f_0, x_1, y_1, f_1, iterations_left);
+        return findRootRegula(func, x_0, y_0, x_1, y_1, iterations_left);
     }
 
     protected double findSteeringMaxS(
@@ -126,26 +148,38 @@ public class SwerveSetpointGenerator {
         }
         double offset = f_0 + Math.signum(diff) * max_deviation;
         Function2d func = (x, y) -> unwrapAngle(f_0, Math.atan2(y, x)) - offset;
-        return findRoot(func, x_0, y_0, f_0 - offset, x_1, y_1, f_1 - offset, max_iterations);
+        // return findRoot(func, x_0, y_0, f_0 - offset, x_1, y_1, f_1 - offset, max_iterations);
+        return 0 ;// FIXME
     }
 
+    /**
+     * @param x_0 vx of the swerve module at s=0
+     * @param y_0 vy of the swerve module at s=0
+     * @param f_0 speed of the swerve module at s=0
+     * @param x_1 vx of the swerve module at s=1
+     * @param y_1 vy of the swerve module at s=1
+     * @param f_1 speed of the swerve module at s=1
+     * @param max_vel_step
+     * @param max_iterations
+     * @return max s 0-1
+     */
     protected double findDriveMaxS(
             double x_0,
             double y_0,
-            double f_0,
             double x_1,
             double y_1,
-            double f_1,
             double max_vel_step,
             int max_iterations) {
-        double diff = f_1 - f_0;
+        double f_0 = Math.hypot(x_0, y_1);
+        double f_1 = Math.hypot(x_0, y_1);
+        double diff = f_1 - f_0; // difference in speed at s=1 vs. s=0
         if (Math.abs(diff) <= max_vel_step) {
-            // Can go all the way to s=1.
+            // If accelerating less than the max acceleration this frame, you can go all the way to s=1.
             return 1.0;
         }
-        double offset = f_0 + Math.signum(diff) * max_vel_step;
-        Function2d func = (x, y) -> Math.hypot(x, y) - offset;
-        return findRoot(func, x_0, y_0, f_0 - offset, x_1, y_1, f_1 - offset, max_iterations);
+        double offset = f_0 + Math.signum(diff) * max_vel_step; // maximum speed of the swerve module after this frame (given the acceleration limit)
+        Function2d func = (x, y) -> Math.hypot(x, y) - offset; // returns the amount faster than the max speed that a vx and vy are
+        return findRoot(func, x_0, y_0, x_1, y_1, max_iterations);
     }
 
     /**
@@ -322,18 +356,15 @@ public class SwerveSetpointGenerator {
             double vy_min_s =
                     min_s == 1.0 ? desired_vy[i] : (desired_vy[i] - prev_vy[i]) * min_s + prev_vy[i];
             // Find the max s for this drive wheel. Search on the interval between 0 and min_s, because we
-            // already know we can't go faster
-            // than that.
-            final int kMaxIterations = 10;
+            // already know we can't go faster than that.
+            final int kMaxIterations = 250;
             double s =
                     min_s
                             * findDriveMaxS(
                                     prev_vx[i],
                                     prev_vy[i],
-                                    Math.hypot(prev_vx[i], prev_vy[i]),
                                     vx_min_s,
                                     vy_min_s,
-                                    Math.hypot(vx_min_s, vy_min_s),
                                     max_vel_step,
                                     kMaxIterations);
             min_s = Math.min(min_s, s);
