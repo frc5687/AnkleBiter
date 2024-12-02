@@ -53,15 +53,14 @@ public class SwerveSetpointGenerator {
         return Math.abs(prevToGoal.getRadians()) > Math.PI / 2.0;
     }
 
-    protected double unwrapAngle(double ref, double angle) {
-        double diff = angle - ref;
-        if (diff > Math.PI) {
-            return angle - 2.0 * Math.PI;
-        } else if (diff < -Math.PI) {
-            return angle + 2.0 * Math.PI;
-        } else {
-            return angle;
-        }
+    /**
+     * modulos an angle to the ref-pi to ref+pi range
+     * @param ref the "zero point"
+     * @param angle the angle to plug in
+     * @return the resulting angle
+     */
+    public static double unwrapAngle(double ref, double angle) {
+        return (angle - ref + Math.PI) % (2 * Math.PI) + ref - Math.PI;
     }
 
     @FunctionalInterface
@@ -69,6 +68,17 @@ public class SwerveSetpointGenerator {
         double f(double x, double y);
     }
 
+    /**
+     * Assume function `func` is continuous and that func.f(x_0, y_0) and func.f(x_1, y_1) have different signs. Linearly interpolate between the two input points, looking for the zero, and return the interpolation constant.
+     * @see https://www.youtube.com/watch?v=pg1I8AG59Ik
+     * @param func function takes in (x,y) outputs a value.
+     * @param x_0 x value at s=0
+     * @param y_0 y value at s=0
+     * @param x_1 x value at s=1
+     * @param y_1 y value at s=1
+     * @param iterations_left
+     * @return 's'. The interpolation constant. Equals 0 when the zero is at (x_0, y_0), equals 1 when the zero is at (x_1, y_1), and equals 0.5 when the zero is at ((x_0+x_1)/2, (y_0,y_1)/2)
+     */
     private static double findRootRegula(
             Function2d func,
             double x_0,
@@ -76,13 +86,8 @@ public class SwerveSetpointGenerator {
             double x_1,
             double y_1,
             int iterations_left) {
-        // usage example: 
-        // Function2d func = (x, y) -> Math.hypot(x, y) - offset; // returns the amount faster than the max speed that a vx and vy are
-        // findRoot(func, x_0, y_0, f_0 - offset, x_1, y_1, f_1 - offset, max_iterations);
         double f_0 = func.f(x_0, y_0);
         double f_1 = func.f(x_1, y_1);
-        // System.out.println("x_0 = "+x_0+", y_0 = "+y_0+", f_0 = "+f_0);
-        // System.out.println("x_1 = "+x_1+", y_1 = "+y_1+", f_1 = "+f_1);
         if (epsilonEquals(f_0, 0)) {
             return 0.0;
         } else if (epsilonEquals(f_1, 0)) {
@@ -96,7 +101,6 @@ public class SwerveSetpointGenerator {
         }
         
         var s_guess = Math.max(0.0, Math.min(1.0, -f_0 / (f_1 - f_0)));
-        // System.out.println("s_guess = "+s_guess+", -f_0 / (f_1 - f_0) = "+(-f_0 / (f_1 - f_0)));
         var x_guess = (x_1 - x_0) * s_guess + x_0;
         var y_guess = (y_1 - y_0) * s_guess + y_0;
         var f_guess = func.f(x_guess, y_guess);
@@ -110,17 +114,6 @@ public class SwerveSetpointGenerator {
         }
     }
 
-    /**
-     * @param func
-     * @param x_0
-     * @param y_0
-     * @param f_0 the amount it can accelerate (+- max_vel_step)
-     * @param x_1
-     * @param y_1
-     * @param f_1
-     * @param iterations_left
-     * @return
-     */
     public static double findRoot(
             Function2d func,
             double x_0,
@@ -149,16 +142,14 @@ public class SwerveSetpointGenerator {
         double offset = f_0 + Math.signum(diff) * max_deviation;
         Function2d func = (x, y) -> unwrapAngle(f_0, Math.atan2(y, x)) - offset;
         // return findRoot(func, x_0, y_0, f_0 - offset, x_1, y_1, f_1 - offset, max_iterations);
-        return 0 ;// FIXME
+        return findRoot(func, x_0, y_0, x_1, y_1, max_iterations); // FIXME NOT SURE IF THIS WORKS
     }
 
     /**
      * @param x_0 vx of the swerve module at s=0
      * @param y_0 vy of the swerve module at s=0
-     * @param f_0 speed of the swerve module at s=0
      * @param x_1 vx of the swerve module at s=1
      * @param y_1 vy of the swerve module at s=1
-     * @param f_1 speed of the swerve module at s=1
      * @param max_vel_step
      * @param max_iterations
      * @return max s 0-1

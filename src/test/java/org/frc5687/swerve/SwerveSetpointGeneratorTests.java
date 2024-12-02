@@ -35,4 +35,14 @@ public class SwerveSetpointGeneratorTests {
         var s = SwerveSetpointGenerator.findRoot(func, 4.9, 4.3, -0.6, 4.9, 100);
         assertEquals(0.546869, s, 0.00001); // found on desmos i made this https://www.desmos.com/calculator/rjhgpw9ah4 -- xavier
     }
+
+    @Test
+    public void angleOneUnwrapped() {
+        assertEquals(1.0, SwerveSetpointGenerator.unwrapAngle(3.0, 1.0), 0.00001);
+    }
+
+    @Test
+    public void angleTwoUnwrapped() {
+        assertEquals(-8.81593, SwerveSetpointGenerator.unwrapAngle(-10.5, 22.6), 0.00001);
+    }
 }
