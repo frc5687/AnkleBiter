@@ -119,7 +119,7 @@ public class Constants {
         public static final double MAX_KRAKEN_FOC_RPM = 5800.0 * MOTOR_LOAD_OUTPUT_PERCENTAGE;
         public static final double MAX_KRAKEN_FOC_TORQUE = 1.552; // This is from a 80 amp current limit
 
-        public static final double MAX_MPS = (
+        public static final double MAX_MPS = (//FIXME: REMOVE THIS :3
             Units.rotationsPerMinuteToRadiansPerSecond(MAX_KRAKEN_FOC_RPM) 
             / SwerveModule.GEAR_RATIO_DRIVE) * SwerveModule.WHEEL_RADIUS;
 
@@ -133,7 +133,7 @@ public class Constants {
 
         static {
             KINEMATIC_LIMITS.maxDriveVelocity = 7; // m/s
-            KINEMATIC_LIMITS.maxDriveAcceleration = 0.1; // m/s^2 
+            KINEMATIC_LIMITS.maxDriveAcceleration = 6.0; // m/s^2 
             KINEMATIC_LIMITS.maxSteeringVelocity = 10; // rad/s
         }
 

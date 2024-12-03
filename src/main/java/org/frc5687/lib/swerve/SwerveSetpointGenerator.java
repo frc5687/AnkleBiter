@@ -94,7 +94,7 @@ public class SwerveSetpointGenerator {
             return 1.0;
         } else if (iterations_left < 0) {
             System.err.println("Failed to reach target error "+EPSILON+", error was "+(f_1-f_0));
-            return 0.5;
+            return 1.0;
         }
         if (Math.signum(f_0) == Math.signum(f_1)) {
             System.err.println("Cannot find root if f_0 and f_1 have the same sign. f_0 = "+f_0+" and f_1 = "+f_1);
@@ -133,16 +133,17 @@ public class SwerveSetpointGenerator {
             double f_1,
             double max_deviation,
             int max_iterations) {
-        f_1 = unwrapAngle(f_0, f_1);
-        double diff = f_1 - f_0;
-        if (Math.abs(diff) <= max_deviation) {
-            // Can go all the way to s=1.
-            return 1.0;
-        }
-        double offset = f_0 + Math.signum(diff) * max_deviation;
-        Function2d func = (x, y) -> unwrapAngle(f_0, Math.atan2(y, x)) - offset;
-        // return findRoot(func, x_0, y_0, f_0 - offset, x_1, y_1, f_1 - offset, max_iterations);
-        return findRoot(func, x_0, y_0, x_1, y_1, max_iterations); // FIXME NOT SURE IF THIS WORKS
+        // f_1 = unwrapAngle(f_0, f_1);
+        // double diff = f_1 - f_0;
+        // if (Math.abs(diff) <= max_deviation) {
+        //     // Can go all the way to s=1.
+        //     return 1.0;
+        // }
+        // double offset = f_0 + Math.signum(diff) * max_deviation;
+        // Function2d func = (x, y) -> unwrapAngle(f_0, Math.atan2(y, x)) - offset;
+        // // return findRoot(func, x_0, y_0, f_0 - offset, x_1, y_1, f_1 - offset, max_iterations);
+        // return findRoot(func, x_0, y_0, x_1, y_1, max_iterations); // FIXME NOT SURE IF THIS WORKS
+        return 1.0; // YOLO
     }
 
     /**
@@ -161,8 +162,8 @@ public class SwerveSetpointGenerator {
             double y_1,
             double max_vel_step,
             int max_iterations) {
-        double f_0 = Math.hypot(x_0, y_1);
-        double f_1 = Math.hypot(x_0, y_1);
+        double f_0 = Math.hypot(x_0, y_0);
+        double f_1 = Math.hypot(x_1, y_1);
         double diff = f_1 - f_0; // difference in speed at s=1 vs. s=0
         if (Math.abs(diff) <= max_vel_step) {
             // If accelerating less than the max acceleration this frame, you can go all the way to s=1.
@@ -321,7 +322,7 @@ public class SwerveSetpointGenerator {
                 continue;
             }
 
-            final int kMaxIterations = 8;
+            final int kMaxIterations = 250;
             double s =
                     findSteeringMaxS(
                             prev_vx[i],

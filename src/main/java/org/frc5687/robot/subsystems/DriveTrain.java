@@ -38,12 +38,8 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.Compressor;
-import edu.wpi.first.wpilibj.DoubleSolenoid;
-import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.PneumaticsModuleType;
 
 public class DriveTrain extends OutliersSubsystem {
     public enum ControlState {
@@ -323,6 +319,13 @@ public class DriveTrain extends OutliersSubsystem {
         return _systemIO.setpoint;
     }
 
+    /**
+     * yolos the setpoint to 0 velocity. ignores acceleration limits and swerve stuff. just straight vibes
+     */
+    public void resetVelocityUnprotected() {
+        _systemIO.setpoint = new SwerveSetpoint(new ChassisSpeeds(), _systemIO.measuredStates);
+    }
+
     public boolean isFieldCentric() {
         return _fieldCentric;
     }
@@ -350,25 +353,12 @@ public class DriveTrain extends OutliersSubsystem {
                 twistVel.dy / Constants.UPDATE_PERIOD,
                 twistVel.dtheta / Constants.UPDATE_PERIOD);
 
-
-        // just for testing, feel free to remove -xavier 11/24/24
-        metric("preSetpointGeneratorVX", updatedChassisSpeeds.vxMetersPerSecond );
-        metric("preSetpointGeneratorVY", updatedChassisSpeeds.vyMetersPerSecond );
-        metric("preSetpointGeneratorOmega", updatedChassisSpeeds.omegaRadiansPerSecond);
         SwerveSetpoint newSetpoint = _swerveSetpointGenerator.generateSetpoint(
                 _kinematicLimits,
                 _systemIO.setpoint,
                 updatedChassisSpeeds,
-                Constants.UPDATE_PERIOD);
-        ChassisSpeeds postSetpointSpeeds = newSetpoint.chassisSpeeds;
-        metric("postSetpointGeneratorVX", postSetpointSpeeds.vxMetersPerSecond );
-        metric("postSetpointGeneratorVY", postSetpointSpeeds.vyMetersPerSecond );
-        metric("postSetpointGeneratorOmega", postSetpointSpeeds.omegaRadiansPerSecond);
-        _systemIO.setpoint = new SwerveSetpoint(updatedChassisSpeeds, _kinematics.toSwerveModuleStates(updatedChassisSpeeds));
-        ChassisSpeeds actualSpeeds = _kinematics.toChassisSpeeds(_systemIO.measuredStates);
-        metric("actualVX", actualSpeeds.vxMetersPerSecond );
-        metric("actualVY", actualSpeeds.vyMetersPerSecond );
-        metric("actualOmega", actualSpeeds.omegaRadiansPerSecond);
+                Constants.UPDATE_PERIOD); // FIXME unyolo this - xavier
+                _systemIO.setpoint = newSetpoint;
     }
 
     /* Module Control Start */

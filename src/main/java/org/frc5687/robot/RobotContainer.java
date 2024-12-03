@@ -97,11 +97,13 @@ public class RobotContainer extends OutliersContainer {
 
     @Override
     public void teleopInit() {
+        _driveTrain.resetVelocityUnprotected(); // this is important otherwise the robot will start with velocity
         _robotState.useTeleopStandardDeviations();
     }
 
     @Override
     public void autonomousInit() {
+        _driveTrain.resetVelocityUnprotected(); // this is important otherwise the robot will start with velocity
         _robotState.useAutoStandardDeviations();
     }
 
