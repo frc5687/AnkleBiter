@@ -19,130 +19,130 @@ import org.photonvision.targeting.PhotonPipelineResult;
 public class PhotonProcessor {
 
     //private static final int NUM_CAMERAS = 4;
-    private final PhotonCamera _northEastCamera;
-    private final PhotonCamera _southEastCamera;
-    private final PhotonCamera _northWestCamera;
-    private final PhotonCamera _southWestCamera;
-    private final PhotonPoseEstimator _southEastCameraEstimator;
-    private final PhotonPoseEstimator _northEastCameraEstimator;
-    private final PhotonPoseEstimator _northWestCameraEstimator;
-    private final PhotonPoseEstimator _southWestCameraEstimator;
+    private final PhotonCamera _eastCamera;
+    private final PhotonCamera _southCamera;
+    private final PhotonCamera _westCamera;
+    private final PhotonCamera _northCamera;
+    private final PhotonPoseEstimator _eastCameraEstimator;
+    private final PhotonPoseEstimator _southCameraEstimator;
+    private final PhotonPoseEstimator _westCameraEstimator;
+    private final PhotonPoseEstimator _northCameraEstimator;
 
     //private final ExecutorService _executorService;
     public PhotonProcessor(AprilTagFieldLayout layout) {
-        _southEastCamera = new PhotonCamera("South_East_Camera");
-        _northEastCamera = new PhotonCamera("North_East_Camera"); 
-        _northWestCamera = new PhotonCamera("North_West_Camera");
-        _southWestCamera = new PhotonCamera("South_West_Camera");
+        _eastCamera = new PhotonCamera("East_Camera");
+        _southCamera = new PhotonCamera("South_Camera"); 
+        _westCamera = new PhotonCamera("West_Camera");
+        _northCamera = new PhotonCamera("North_Camera");
         // _executorService = Executors.newFixedThreadPool(NUM_CAMERAS);
 
         // setPipeline(Pipeline.FAR);
         // z taken from floor
 
         // FIXME: look at the order the rotation transformations are applied -xavier bradford
-        Transform3d robotToSouthEastCam =
-            new Transform3d(
-                new Translation3d(-0.107009, -0.104835, 0.57991),
-                new Rotation3d(0.0, 0.0, Units.degreesToRadians(162.5))
+        Transform3d robotToEastCam =
+             new Transform3d(
+                new Translation3d(Units.inchesToMeters(3.0), Units.inchesToMeters(14), Units.inchesToMeters(2.0)),
+                new Rotation3d(0.0, Units.degreesToRadians(0.0), Units.degreesToRadians(15.0))
             );
 
-        Transform3d robotToNorthEastCam =
-            new Transform3d(
-                new Translation3d(Units.inchesToMeters(3.90), Units.inchesToMeters(-7.05), Units.inchesToMeters(11.00)),
-                new Rotation3d(0.0, Units.degreesToRadians(16.5), Units.degreesToRadians(-25.5))
+        Transform3d robotToSouthCam =
+             new Transform3d(
+                new Translation3d(Units.inchesToMeters(3.0), Units.inchesToMeters(14), Units.inchesToMeters(2.0)),
+                new Rotation3d(0.0, Units.degreesToRadians(0.0), Units.degreesToRadians(15.0))
             );
 
-        Transform3d robotToNorthWestCam =
+        Transform3d robotToWestCam =
             new Transform3d(
-                new Translation3d(Units.inchesToMeters(3.90), Units.inchesToMeters(7.05), Units.inchesToMeters(11.00)),
-                new Rotation3d(0.0, Units.degreesToRadians(16.5), Units.degreesToRadians(25.5))
+                new Translation3d(Units.inchesToMeters(3.0), Units.inchesToMeters(14), Units.inchesToMeters(2.0)),
+                new Rotation3d(0.0, Units.degreesToRadians(0.0), Units.degreesToRadians(15.0))
             );
 
-        Transform3d robotToSouthWestCam =
-            new Transform3d(
-                new Translation3d(-0.107009, 0.104835, 0.57991),
-                new Rotation3d(0.0, 0.0, Units.degreesToRadians(-162.5))
+        Transform3d robotToNorthCam =
+             new Transform3d(
+                new Translation3d(Units.inchesToMeters(3.0), Units.inchesToMeters(14), Units.inchesToMeters(2.0)),
+                new Rotation3d(0.0, Units.degreesToRadians(0.0), Units.degreesToRadians(15.0))
             );
 
-        _southEastCameraEstimator =
+        _eastCameraEstimator =
             new PhotonPoseEstimator(
                 layout,
                 PhotonPoseEstimator.PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
-                _southEastCamera,
-                robotToSouthEastCam);
+                _eastCamera,
+                robotToEastCam);
             
-        _northEastCameraEstimator =
+        _southCameraEstimator =
             new PhotonPoseEstimator(
                 layout,
                 PhotonPoseEstimator.PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
-                _northEastCamera,
-                robotToNorthEastCam);
+                _southCamera,
+                robotToSouthCam);
 
-        _northWestCameraEstimator =
+        _westCameraEstimator =
             new PhotonPoseEstimator(
                 layout,
                 PhotonPoseEstimator.PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
-                _northWestCamera,
-                robotToNorthWestCam);
+                _westCamera,
+                robotToWestCam);
 
-        _southWestCameraEstimator =
+        _northCameraEstimator =
             new PhotonPoseEstimator(
                 layout,
                 PhotonPoseEstimator.PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
-                _southWestCamera,
-                robotToSouthWestCam);
+                _northCamera,
+                robotToNorthCam);
 
-        _southEastCameraEstimator.setMultiTagFallbackStrategy(
+        _eastCameraEstimator.setMultiTagFallbackStrategy(
                 PhotonPoseEstimator.PoseStrategy.LOWEST_AMBIGUITY);
-        _northEastCameraEstimator.setMultiTagFallbackStrategy(
+        _southCameraEstimator.setMultiTagFallbackStrategy(
                 PhotonPoseEstimator.PoseStrategy.LOWEST_AMBIGUITY);
-        _northWestCameraEstimator.setMultiTagFallbackStrategy(
+        _westCameraEstimator.setMultiTagFallbackStrategy(
                 PhotonPoseEstimator.PoseStrategy.LOWEST_AMBIGUITY);
-        _southWestCameraEstimator.setMultiTagFallbackStrategy(
+        _northCameraEstimator.setMultiTagFallbackStrategy(
                 PhotonPoseEstimator.PoseStrategy.LOWEST_AMBIGUITY);
     }
 
     public void setPipeline(Pipeline pipeline) {
-        _southEastCamera.setPipelineIndex(pipeline.getValue());
-        _northEastCamera.setPipelineIndex(pipeline.getValue());
-        _northWestCamera.setPipelineIndex(pipeline.getValue());
-        _southWestCamera.setPipelineIndex(pipeline.getValue());
+        _eastCamera.setPipelineIndex(pipeline.getValue());
+        _southCamera.setPipelineIndex(pipeline.getValue());
+        _westCamera.setPipelineIndex(pipeline.getValue());
+        _northCamera.setPipelineIndex(pipeline.getValue());
     }
     
-    public double getSouthEastCameraLatency() {
-        return _southEastCamera.getLatestResult().getLatencyMillis();
+    public double getEastCameraLatency() {
+        return _eastCamera.getLatestResult().getLatencyMillis();
     }
 
-    public double getNorthEastCameraLatency() {
-        return _northEastCamera.getLatestResult().getLatencyMillis();
+    public double getSouthCameraLatency() {
+        return _southCamera.getLatestResult().getLatencyMillis();
     }
         
-    public double getNorthWestCameraLatency() {
-        return _northWestCamera.getLatestResult().getLatencyMillis();
+    public double getWestCameraLatency() {
+        return _westCamera.getLatestResult().getLatencyMillis();
     }
 
-    public double getSouthWestCameraLatency() {
-        return _southWestCamera.getLatestResult().getLatencyMillis();
+    public double getNorthCameraLatency() {
+        return _northCamera.getLatestResult().getLatencyMillis();
     }
 
-    public boolean hasSouthEastCameraTargets() {
-        return _southEastCamera.getLatestResult().hasTargets();
+    public boolean hasEastCameraTargets() {
+        return _eastCamera.getLatestResult().hasTargets();
     }
 
-    public boolean hasNorthEastCameraTargets() {
-        return _northEastCamera.getLatestResult().hasTargets();
+    public boolean hasSouthCameraTargets() {
+        return _southCamera.getLatestResult().hasTargets();
     }
 
-    public boolean hasNorthWestCameraTargets() {
-        return _northWestCamera.getLatestResult().hasTargets();
+    public boolean hasWestCameraTargets() {
+        return _westCamera.getLatestResult().hasTargets();
     }
 
-    public boolean hasSouthWestCameraTargets() {
-        return _southWestCamera.getLatestResult().hasTargets();
+    public boolean hasNorthCameraTargets() {
+        return _northCamera.getLatestResult().hasTargets();
     }
 
-    public boolean isSouthEastTargetsWithinAmbiguity(double ambiguityTolerance) {
-        var tags = _southEastCamera.getLatestResult().targets;
+    public boolean isEastTargetsWithinAmbiguity(double ambiguityTolerance) {
+        var tags = _eastCamera.getLatestResult().targets;
         for (var tag : tags) {
             if (tag.getPoseAmbiguity() < ambiguityTolerance) {
                 return false;
@@ -150,8 +150,8 @@ public class PhotonProcessor {
         } 
         return true;
     }
-    public boolean isNorthEastTargetsWithinAmbiguity(double ambiguityTolerance) {
-        var tags = _northEastCamera.getLatestResult().targets;
+    public boolean isSouthTargetsWithinAmbiguity(double ambiguityTolerance) {
+        var tags = _southCamera.getLatestResult().targets;
         for (var tag : tags) {
             if (tag.getPoseAmbiguity() < ambiguityTolerance) {
                 return false;
@@ -159,8 +159,8 @@ public class PhotonProcessor {
         } 
         return true;
     }
-    public boolean isNorthWestTargetsWithinAmbiguity(double ambiguityTolerance) {
-        var tags = _northWestCamera.getLatestResult().targets;
+    public boolean isWestTargetsWithinAmbiguity(double ambiguityTolerance) {
+        var tags = _westCamera.getLatestResult().targets;
         for (var tag : tags) {
             if (tag.getPoseAmbiguity() < ambiguityTolerance) {
                 return false;
@@ -169,8 +169,8 @@ public class PhotonProcessor {
         return true;
     }
 
-    public boolean isSouthWestTargetsWithinAmbiguity(double ambiguityTolerance) {
-        var tags = _southWestCamera.getLatestResult().targets;
+    public boolean isNorthTargetsWithinAmbiguity(double ambiguityTolerance) {
+        var tags = _northCamera.getLatestResult().targets;
         for (var tag : tags) {
             if (tag.getPoseAmbiguity() < ambiguityTolerance) {
                 return false;
@@ -180,90 +180,119 @@ public class PhotonProcessor {
     }
 
     public void setLowestAmbiguity() {
-        _southEastCameraEstimator.setPrimaryStrategy(PhotonPoseEstimator.PoseStrategy.LOWEST_AMBIGUITY);
-        _northEastCameraEstimator.setPrimaryStrategy(PhotonPoseEstimator.PoseStrategy.LOWEST_AMBIGUITY);
-        _northWestCameraEstimator.setPrimaryStrategy(PhotonPoseEstimator.PoseStrategy.LOWEST_AMBIGUITY);
-        _southWestCameraEstimator.setPrimaryStrategy(PhotonPoseEstimator.PoseStrategy.LOWEST_AMBIGUITY);
+        _eastCameraEstimator.setPrimaryStrategy(PhotonPoseEstimator.PoseStrategy.LOWEST_AMBIGUITY);
+        _southCameraEstimator.setPrimaryStrategy(PhotonPoseEstimator.PoseStrategy.LOWEST_AMBIGUITY);
+        _westCameraEstimator.setPrimaryStrategy(PhotonPoseEstimator.PoseStrategy.LOWEST_AMBIGUITY);
+        _northCameraEstimator.setPrimaryStrategy(PhotonPoseEstimator.PoseStrategy.LOWEST_AMBIGUITY);
     }
 
-    public Optional<EstimatedRobotPose> getSouthEastCameraEstimatedGlobalPose(
+    public Optional<EstimatedRobotPose> getSouthCameraEstimatedGlobalPose(
             Pose2d prevEstimatedPose) {
-        _southEastCameraEstimator.setReferencePose(prevEstimatedPose);
-        PhotonPipelineResult results = _southEastCamera.getLatestResult();
+        _southCameraEstimator.setReferencePose(prevEstimatedPose);
+        PhotonPipelineResult results = _southCamera.getLatestResult();
         if (results.hasTargets()) {
             results.targets.removeIf(tag -> tag.getPoseAmbiguity() > Constants.Vision.AMBIGUITY_TOLERANCE);
         }
-        return _southEastCameraEstimator.update(results);
+        return _southCameraEstimator.update(results);
     }
 
-    public Optional<EstimatedRobotPose> getNorthEastCameraEstimatedGlobalPose(
+    public Optional<EstimatedRobotPose> getWestCameraEstimatedGlobalPose(
             Pose2d prevEstimatedPose) {
-        _northEastCameraEstimator.setReferencePose(prevEstimatedPose);
-        PhotonPipelineResult results = _northEastCamera.getLatestResult();
+        _westCameraEstimator.setReferencePose(prevEstimatedPose);
+        PhotonPipelineResult results = _westCamera.getLatestResult();
         if (results.hasTargets()) {
             results.targets.removeIf(tag -> tag.getPoseAmbiguity() > Constants.Vision.AMBIGUITY_TOLERANCE);
         }
-        return _northEastCameraEstimator.update(results);
+        return _westCameraEstimator.update(results);
     }
 
-    public Optional<EstimatedRobotPose> getNorthWestCameraEstimatedGlobalPose(
-            Pose2d prevEstimatedPose) {
-        _northWestCameraEstimator.setReferencePose(prevEstimatedPose);
-        PhotonPipelineResult results = _northWestCamera.getLatestResult();
-        if (results.hasTargets()) {
-            results.targets.removeIf(tag -> tag.getPoseAmbiguity() > Constants.Vision.AMBIGUITY_TOLERANCE);
-        }
-        return _northWestCameraEstimator.update(results);
+    public Optional<EstimatedRobotPose> getEastCameraEstimatedGlobalPose(
+        Pose2d prevEstimatedPose) {
+    _eastCameraEstimator.setReferencePose(prevEstimatedPose);
+    PhotonPipelineResult results = _eastCamera.getLatestResult();
+    if (results.hasTargets()) {
+        results.targets.removeIf(tag -> tag.getPoseAmbiguity() > Constants.Vision.AMBIGUITY_TOLERANCE);
     }
+    return _eastCameraEstimator.update(results);
+}
 
-    public Optional<EstimatedRobotPose> getSouthWestCameraEstimatedGlobalPose(
-            Pose2d prevEstimatedPose) {
-        _southWestCameraEstimator.setReferencePose(prevEstimatedPose);
-        PhotonPipelineResult results = _southWestCamera.getLatestResult();
-        if (results.hasTargets()) {
-            results.targets.removeIf(tag -> tag.getPoseAmbiguity() > Constants.Vision.AMBIGUITY_TOLERANCE);
-        }
-        return _southWestCameraEstimator.update(results);
+public Optional<EstimatedRobotPose> getNorthCameraEstimatedGlobalPose(
+        Pose2d prevEstimatedPose) {
+    _northCameraEstimator.setReferencePose(prevEstimatedPose);
+    PhotonPipelineResult results = _northCamera.getLatestResult();
+    if (results.hasTargets()) {
+        results.targets.removeIf(tag -> tag.getPoseAmbiguity() > Constants.Vision.AMBIGUITY_TOLERANCE);
     }
+    return _northCameraEstimator.update(results);
+}
 
-    public Pair<Optional<EstimatedRobotPose>, String> getNorthEastCameraEstimatedGlobalPoseWithName(Pose2d prevEstimatedPose) {
-        return new Pair<Optional<EstimatedRobotPose>, String>(getNorthEastCameraEstimatedGlobalPose(prevEstimatedPose), "NorthEast");
-    } 
+public Pair<EstimatedRobotPose, String> getEastCameraEstimatedGlobalPoseWithName(
+        Pose2d prevEstimatedPose) {
+    _eastCameraEstimator.setReferencePose(prevEstimatedPose);
+    PhotonPipelineResult results = _eastCamera.getLatestResult();
+    if (results.hasTargets()) {
+        results.targets.removeIf(tag -> tag.getPoseAmbiguity() > Constants.Vision.AMBIGUITY_TOLERANCE);
+    }
+    Optional<EstimatedRobotPose> pose = _eastCameraEstimator.update(results);
+    return new Pair<>(pose.orElse(null), "East");
+}
 
-    public Pair<Optional<EstimatedRobotPose>, String> getNorthWestCameraEstimatedGlobalPoseWithName(Pose2d prevEstimatedPose) {
-        return new Pair<Optional<EstimatedRobotPose>, String>(getNorthWestCameraEstimatedGlobalPose(prevEstimatedPose), "NorthWest");
-    } 
 
-    public Pair<Optional<EstimatedRobotPose>, String> getSouthEastCameraEstimatedGlobalPoseWithName(Pose2d prevEstimatedPose) {
-        return new Pair<Optional<EstimatedRobotPose>, String>(getSouthEastCameraEstimatedGlobalPose(prevEstimatedPose), "SouthEast");
-    } 
+public Pair<EstimatedRobotPose, String> getSouthCameraEstimatedGlobalPoseWithName(
+        Pose2d prevEstimatedPose) {
+    _southCameraEstimator.setReferencePose(prevEstimatedPose);
+    PhotonPipelineResult results = _southCamera.getLatestResult();
+    if (results.hasTargets()) {
+        results.targets.removeIf(tag -> tag.getPoseAmbiguity() > Constants.Vision.AMBIGUITY_TOLERANCE);
+    }
+    Optional<EstimatedRobotPose> pose = _southCameraEstimator.update(results);
+    return new Pair<>(pose.orElse(null), "North");
+}
 
-    public Pair<Optional<EstimatedRobotPose>, String> getSouthWestCameraEstimatedGlobalPoseWithName(Pose2d prevEstimatedPose) {
-        return new Pair<Optional<EstimatedRobotPose>, String>(getSouthWestCameraEstimatedGlobalPose(prevEstimatedPose), "SouthWest");
-    } 
+public Pair<EstimatedRobotPose, String> getWestCameraEstimatedGlobalPoseWithName(
+        Pose2d prevEstimatedPose) {
+    _westCameraEstimator.setReferencePose(prevEstimatedPose);
+    PhotonPipelineResult results = _westCamera.getLatestResult();
+    if (results.hasTargets()) {
+        results.targets.removeIf(tag -> tag.getPoseAmbiguity() > Constants.Vision.AMBIGUITY_TOLERANCE);
+    }
+    Optional<EstimatedRobotPose> pose = _westCameraEstimator.update(results);
+    return new Pair<>(pose.orElse(null), "North");
+}
 
-    public CompletableFuture<Optional<EstimatedRobotPose>> getSouthEastCameraEstimatedGlobalPoseAsync(
+public Pair<EstimatedRobotPose, String> getNorthCameraEstimatedGlobalPoseWithName(
+        Pose2d prevEstimatedPose) {
+    _northCameraEstimator.setReferencePose(prevEstimatedPose);
+    PhotonPipelineResult results = _northCamera.getLatestResult();
+    if (results.hasTargets()) {
+        results.targets.removeIf(tag -> tag.getPoseAmbiguity() > Constants.Vision.AMBIGUITY_TOLERANCE);
+    }
+    Optional<EstimatedRobotPose> pose = _northCameraEstimator.update(results);
+    return new Pair<>(pose.orElse(null), "North");
+}
+
+    public CompletableFuture<Optional<EstimatedRobotPose>> getEastCameraEstimatedGlobalPoseAsync(
             Pose2d prevEstimatedPose) {
         return CompletableFuture.supplyAsync(
-                () -> getSouthEastCameraEstimatedGlobalPose(prevEstimatedPose));
+                () -> getEastCameraEstimatedGlobalPose(prevEstimatedPose));
     }
 
-    public CompletableFuture<Optional<EstimatedRobotPose>> getNorthEastCameraEstimatedGlobalPoseAsync(
+    public CompletableFuture<Optional<EstimatedRobotPose>> getSouthCameraEstimatedGlobalPoseAsync(
             Pose2d prevEstimatedPose) {
         return CompletableFuture.supplyAsync(
-                () -> getNorthEastCameraEstimatedGlobalPose(prevEstimatedPose));
+                () -> getSouthCameraEstimatedGlobalPose(prevEstimatedPose));
     }
 
-    public CompletableFuture<Optional<EstimatedRobotPose>> getNorthWestCameraEstimatedGlobalPoseAsync(
+    public CompletableFuture<Optional<EstimatedRobotPose>> getWestCameraEstimatedGlobalPoseAsync(
                 Pose2d prevEstimatedPose) {
         return CompletableFuture.supplyAsync(
-                () -> getNorthWestCameraEstimatedGlobalPose(prevEstimatedPose));
+                () -> getWestCameraEstimatedGlobalPose(prevEstimatedPose));
     }
 
-    public CompletableFuture<Optional<EstimatedRobotPose>> getSouthWestCameraEstimatedGlobalPoseAsync(
+    public CompletableFuture<Optional<EstimatedRobotPose>> getNorthCameraEstimatedGlobalPoseAsync(
             Pose2d prevEstimatedPose) {
         return CompletableFuture.supplyAsync(
-                () -> getSouthWestCameraEstimatedGlobalPose(prevEstimatedPose));
+                () -> getNorthCameraEstimatedGlobalPose(prevEstimatedPose));
     }
 
 

@@ -8,6 +8,8 @@ import org.frc5687.robot.subsystems.SwerveModule.ModuleConfiguration;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 
@@ -78,6 +80,11 @@ public class Constants {
 
             STEER_CONTROLLER_CONFIG.IS_CONTINUOUS = true;
         }
+    }
+
+    public static class FieldConstants {
+        public static final double FIELD_LENGTH = 16.54175;
+        public static final double FIELD_WIDTH = 8.0137;
     }
 
     /**
@@ -239,5 +246,11 @@ public class Constants {
             public static double VISION_STD_DEV_ANGLE = Units.degreesToRadians(900); // imu deviations lower number to
                                                                                      // trust
         }
+    }
+
+     public static class RobotState {
+        public static final double VISION_TIMESTAMP_FUDGE = -0.00;
+
+        public static double VISION_AIMING_TOLERANCE = Units.degreesToRadians(2);
     }
 }
