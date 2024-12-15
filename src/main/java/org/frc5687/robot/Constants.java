@@ -2,7 +2,6 @@
 package org.frc5687.robot;
 
 import org.frc5687.lib.drivers.OutliersTalon;
-import org.frc5687.lib.swerve.SwerveSetpointGenerator.KinematicLimits;
 import org.frc5687.robot.subsystems.SwerveModule.ModuleConfiguration;
 
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -12,6 +11,9 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
+// import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.DistanceUnit;
+import edu.wpi.first.units.Measure;
 
 public class Constants {
     public static final int TICKS_PER_UPDATE = 1; // This is for the smartdashboard. 1 means it will update at the rate of the robot code, 5 will update every 5th loop and so on.
@@ -26,7 +28,7 @@ public class Constants {
         public static final OutliersTalon.Configuration DRIVE_CONFIG = new OutliersTalon.Configuration();
         public static final OutliersTalon.Configuration STEER_CONFIG = new OutliersTalon.Configuration();
 
-        public static final double WHEEL_RADIUS =  0.0508; //11/15/2024 test
+        public static final double WHEEL_RADIUS = 0.0508; //11/15/2024 test (meters)
         public static final double GEAR_RATIO_DRIVE = (54.0 / 14.0) * (18.0 / 34.0) * (45.0 / 16.0);// 6.126
         public static final double GEAR_RATIO_STEER = (48.0 / 18.0) * (96.0 / 16.0); // 16.0
 
@@ -121,7 +123,7 @@ public class Constants {
         public static final double SWERVE_WE_POS = WIDTH / 2.0;
 
         public static final double ROBOT_RADIUS = Math.sqrt(WIDTH * WIDTH + LENGTH * LENGTH) / 2.0;
-        public static final double MOTOR_LOAD_OUTPUT_PERCENTAGE = 1.0; // Assume that there is and efficiency drop under load
+        public static final double MOTOR_LOAD_OUTPUT_PERCENTAGE = 0.8; // Assume that there is and efficiency drop under load
         public static final double MAX_FALCON_FOC_RPM = 6080.0 * MOTOR_LOAD_OUTPUT_PERCENTAGE;
         public static final double MAX_KRAKEN_FOC_RPM = 5800.0 * MOTOR_LOAD_OUTPUT_PERCENTAGE;
         public static final double MAX_KRAKEN_FOC_TORQUE = 1.552; // This is from a 80 amp current limit
@@ -135,14 +137,6 @@ public class Constants {
 
         public static final double MAX_ANG_VEL = 2.0 * Math.PI; // Max rotation rate of robot (rads/s)
         public static final double MAX_ANG_ACC = 2.0 * Math.PI; // Max angular acceleration of robot (rads/s^2)
-
-        public static final KinematicLimits KINEMATIC_LIMITS = new KinematicLimits();
-
-        static {
-            KINEMATIC_LIMITS.maxDriveVelocity = 7; // m/s
-            KINEMATIC_LIMITS.maxDriveAcceleration = 6.0; // m/s^2 
-            KINEMATIC_LIMITS.maxSteeringVelocity = 10; // rad/s
-        }
 
         /*
          * How to find offsets:

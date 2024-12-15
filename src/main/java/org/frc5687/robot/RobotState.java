@@ -1,19 +1,14 @@
 package org.frc5687.robot;
 
-import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.frc5687.robot.subsystems.DriveTrain;
-import org.frc5687.robot.util.PhotonProcessor;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 
-import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain.SwerveDriveState;
+import com.ctre.phoenix6.swerve.SwerveDrivetrain.SwerveDriveState;
 
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.VecBuilder;
@@ -41,7 +36,7 @@ public class RobotState {
     private final Lock writeLock = stateLock.writeLock();
 
     private DriveTrain _driveTrain;
-    private PhotonProcessor _photonProcessor;
+    // private PhotonProcessor _photonProcessor;
     private SwerveDrivePoseEstimator _poseEstimator;
 
     private volatile SwerveDriveState _cachedState = new SwerveDriveState();
@@ -144,22 +139,22 @@ public class RobotState {
     }
 
    private void updateWithVision() {
-        Pose2d prevEstimatedPose = _estimatedPose;
-        List<Pair<EstimatedRobotPose, String>> cameraPoses = Stream.of(
-                _photonProcessor.getEastCameraEstimatedGlobalPoseWithName(prevEstimatedPose),
-                _photonProcessor.getSouthCameraEstimatedGlobalPoseWithName(prevEstimatedPose),
-                _photonProcessor.getWestCameraEstimatedGlobalPoseWithName(prevEstimatedPose),
-                _photonProcessor.getNorthCameraEstimatedGlobalPoseWithName(prevEstimatedPose)
-                )
-                .filter(pair -> pair.getFirst() != null)
-                .filter(pair -> isValidMeasurementTest(pair))
-                .collect(Collectors.toList());
+    //     Pose2d prevEstimatedPose = _estimatedPose; FIXME add this back
+    //     List<Pair<EstimatedRobotPose, String>> cameraPoses = Stream.of(
+    //             _photonProcessor.getEastCameraEstimatedGlobalPoseWithName(prevEstimatedPose),
+    //             _photonProcessor.getSouthCameraEstimatedGlobalPoseWithName(prevEstimatedPose),
+    //             _photonProcessor.getWestCameraEstimatedGlobalPoseWithName(prevEstimatedPose),
+    //             _photonProcessor.getNorthCameraEstimatedGlobalPoseWithName(prevEstimatedPose)
+    //             )
+    //             .filter(pair -> pair.getFirst() != null)
+    //             .filter(pair -> isValidMeasurementTest(pair))
+    //             .collect(Collectors.toList());
             
-        // for (int i = 0; i < cameraPoses.size() && i < 4; i++) {
-        //     _latestCameraPoses[i] = cameraPoses.get(i);
-        // }
+    //     // for (int i = 0; i < cameraPoses.size() && i < 4; i++) {
+    //     //     _latestCameraPoses[i] = cameraPoses.get(i);
+    //     // }
 
-       cameraPoses.forEach(this::processVisionMeasurement);
+    //    cameraPoses.forEach(this::processVisionMeasurement);
     }
 
     public void periodic() {

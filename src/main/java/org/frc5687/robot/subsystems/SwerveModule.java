@@ -2,7 +2,6 @@
 package org.frc5687.robot.subsystems;
 
 import static org.frc5687.robot.Constants.SwerveModule.DRIVE_CONTROLLER_CONFIG;
-import static org.frc5687.robot.Constants.SwerveModule.WHEEL_RADIUS;
 import org.frc5687.lib.drivers.OutliersTalon;
 import org.frc5687.robot.Constants;
 
@@ -14,7 +13,6 @@ import com.ctre.phoenix6.controls.MotionMagicExpoTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.MotionMagicTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.CANcoder;
-import com.ctre.phoenix6.signals.AbsoluteSensorRangeValue;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 
@@ -22,7 +20,11 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.util.Units;
+
+import edu.wpi.first.units.Units;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class SwerveModule {
@@ -41,10 +43,10 @@ public class SwerveModule {
     private Translation2d _modulePosition;
 
     private final BaseStatusSignal[] _signals = new BaseStatusSignal[4];
-    private StatusSignal<Double> _driveVelocityRotationsPerSec;
-    private StatusSignal<Double> _drivePositionRotations;
-    private StatusSignal<Double> _steeringVelocityRotationsPerSec;
-    private StatusSignal<Double> _steeringPositionRotations;
+    private StatusSignal<AngularVelocity> _driveMotorAngularVelocity;
+    private StatusSignal<Angle> _driveMotorAngle;
+    private StatusSignal<AngularVelocity> cancoderAngularVelocity;
+    private StatusSignal<Angle> _cancoderAngle;
 
     private VelocityTorqueCurrentFOC _velocityTorqueCurrentFOC;
     private MotionMagicExpoTorqueCurrentFOC _angleTorqueExpo;
@@ -80,7 +82,7 @@ public class SwerveModule {
         _encoder = new CANcoder(encoderPort, config.canBus);
         CANcoderConfiguration CANfig = new CANcoderConfiguration();
         // set units of the CANCoder to radians, with velocity being radians per second
-        CANfig.MagnetSensor.AbsoluteSensorRange = AbsoluteSensorRangeValue.Signed_PlusMinusHalf;
+        // CANfig.MagnetSensor.AbsoluteSensorRange = AbsoluteSensorRangeValue.Signed_PlusMinusHalf; FIXME I'm not sure how to use the phoenix 6 api for this... if the swerves are off by like 90deg or 180 this could be why --xavier
         CANfig.MagnetSensor.MagnetOffset = config.encoderOffset;
         CANfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
 
@@ -104,23 +106,23 @@ public class SwerveModule {
     }
 
     private void initializeSignals() {
-        _drivePositionRotations = _driveMotor.getPosition();
-        _driveVelocityRotationsPerSec = _driveMotor.getVelocity();
-        _steeringPositionRotations = _encoder.getPosition();
-        _steeringVelocityRotationsPerSec = _encoder.getVelocity();
+        _driveMotorAngle = _driveMotor.getPosition();
+        _driveMotorAngularVelocity = _driveMotor.getVelocity();
+        _cancoderAngle = _encoder.getPosition();
+        cancoderAngularVelocity = _encoder.getVelocity();
 
         _driveMotor.getFault_Hardware().setUpdateFrequency(4, 0.04); // not sure if this is used?? - xavier
-        _driveVelocityRotationsPerSec.setUpdateFrequency(1 / 250);
-        _drivePositionRotations.setUpdateFrequency(1 / 250);
+        _driveMotorAngularVelocity.setUpdateFrequency(1 / 250);
+        _driveMotorAngle.setUpdateFrequency(1 / 250);
 
         _steeringMotor.getFault_Hardware().setUpdateFrequency(4, 0.04); // not sure if this is used?? - xavier
-        _steeringVelocityRotationsPerSec.setUpdateFrequency(1 / 250);
-        _steeringPositionRotations.setUpdateFrequency(1 / 250);
+        cancoderAngularVelocity.setUpdateFrequency(1 / 250);
+        _cancoderAngle.setUpdateFrequency(1 / 250);
 
-        _signals[0] = _driveVelocityRotationsPerSec;
-        _signals[1] = _drivePositionRotations;
-        _signals[2] = _steeringVelocityRotationsPerSec;
-        _signals[3] = _steeringPositionRotations;
+        _signals[0] = _driveMotorAngularVelocity;
+        _signals[1] = _driveMotorAngle;
+        _signals[2] = cancoderAngularVelocity;
+        _signals[3] = _cancoderAngle;
     }
 
     public void setControlRequestUpdateFrequency(double updateFreqHz) {
@@ -148,48 +150,39 @@ public class SwerveModule {
     }
 
     public SwerveModulePosition getPosition() {
-        BaseStatusSignal.refreshAll(_drivePositionRotations, _driveVelocityRotationsPerSec, _steeringPositionRotations, _steeringVelocityRotationsPerSec);
-        double currentEncoderRotations = BaseStatusSignal.getLatencyCompensatedValue(_drivePositionRotations, _driveVelocityRotationsPerSec);
-        double distanceMeters = currentEncoderRotations * 2.0 * Math.PI / Constants.SwerveModule.GEAR_RATIO_DRIVE * Constants.SwerveModule.WHEEL_RADIUS ;
-        double angle_rot = BaseStatusSignal.getLatencyCompensatedValue(_steeringPositionRotations, _steeringVelocityRotationsPerSec);
+        BaseStatusSignal.refreshAll(_driveMotorAngle, _driveMotorAngularVelocity, _cancoderAngle, cancoderAngularVelocity);
+        double steeringAngleRotations = BaseStatusSignal.getLatencyCompensatedValue(_cancoderAngle, cancoderAngularVelocity).in(Units.Rotations);
+
+        double driveMotorAngleRadians = BaseStatusSignal.getLatencyCompensatedValue(_driveMotorAngle, _driveMotorAngularVelocity).in(Units.Radians);
+        double driveMetersPerRotation = Constants.SwerveModule.WHEEL_RADIUS / Constants.SwerveModule.GEAR_RATIO_DRIVE;
+
+        double distanceMeters = driveMotorAngleRadians * driveMetersPerRotation;
 
         _internalState.distanceMeters = distanceMeters;
-        _internalState.angle = Rotation2d.fromRotations(angle_rot);
+        _internalState.angle = Rotation2d.fromRotations(steeringAngleRotations);
 
         return _internalState;
     }
 
     private Rotation2d getCanCoderAngle() {
-        _steeringPositionRotations.refresh();
-        return Rotation2d.fromRotations(_encoder.getAbsolutePosition().getValue());
+        _cancoderAngle.refresh();
+        return Rotation2d.fromRotations(_encoder.getAbsolutePosition().getValue().in(Units.Rotations));
     }
 
     public double getDriveRPM() {
-        return OutliersTalon.rotationsPerSecToRPM(_driveVelocityRotationsPerSec.getValue(), 1.0);
-    }
-
-    public double getTurningRPM() {
-        return OutliersTalon.rotationsPerSecToRPM(_steeringVelocityRotationsPerSec.getValue(), 1.0);
+        return _driveMotorAngularVelocity.getValue().in(Units.RPM);
     }
 
     public double getWheelVelocityMetersPerSecond() {
-        return getWheelAngularVelocity() * Constants.SwerveModule.WHEEL_RADIUS;
+        return getWheelAngularVelocity().in(Units.RadiansPerSecond) * Constants.SwerveModule.WHEEL_RADIUS;
     }
 
-    public double getWheelAngularVelocity() {
-        return Units.rotationsPerMinuteToRadiansPerSecond(getDriveRPM() / Constants.SwerveModule.GEAR_RATIO_DRIVE);
+    public AngularVelocity getWheelAngularVelocity() {
+        return _driveMotorAngularVelocity.getValue().div(Constants.SwerveModule.GEAR_RATIO_DRIVE);
     }
 
     public Translation2d getModuleLocation() {
         return _modulePosition;
-    }
-
-    public double getWheelDistanceMeters() {
-        return getWheelDistanceRadians() * WHEEL_RADIUS;
-    }
-
-    public double getWheelDistanceRadians() {
-        return _drivePositionRotations.getValue() * (Math.PI * 2.0) / (Constants.SwerveModule.GEAR_RATIO_DRIVE);
     }
 
     public BaseStatusSignal[] getSignals() {

@@ -1,6 +1,8 @@
 /* Team 5687 (C)2020-2022 */
 package org.frc5687.robot.subsystems;
 
+import edu.wpi.first.units.Measure;
+import edu.wpi.first.units.Unit;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -72,6 +74,13 @@ public abstract class OutliersSubsystem extends SubsystemBase implements ILoggin
 
     public void metric(String name, boolean value) {
         SmartDashboard.putBoolean(getClass().getSimpleName() + "/" + name, value);
+        if (_metricTracker != null) {
+            _metricTracker.put(name, value);
+        }
+    }
+
+    public void metric(String name, Measure<Unit> value) {
+        SmartDashboard.putString(getClass().getSimpleName() + "/" + name, value.toLongString());
         if (_metricTracker != null) {
             _metricTracker.put(name, value);
         }

@@ -58,7 +58,7 @@ public class OutliersTalon extends TalonFX {
     private final PositionDutyCycle _positionDutyCycle = new PositionDutyCycle(0.0);
 
     /* Velocity Control */
-    public VelocityVoltage _velocityVoltage = new VelocityVoltage(0.0, 0.0, true, 0, 0, true, false, false);
+    public VelocityVoltage _velocityVoltage = new VelocityVoltage(0.0);
 
     public OutliersTalon(int port, String canBus, String name) {
         super(port, canBus);

@@ -3,15 +3,11 @@ package org.frc5687.robot.subsystems;
 import static org.frc5687.robot.Constants.DriveTrain.HEADING_kD;
 import static org.frc5687.robot.Constants.DriveTrain.HEADING_kI;
 import static org.frc5687.robot.Constants.DriveTrain.HEADING_kP;
-import static org.frc5687.robot.Constants.DriveTrain.KINEMATIC_LIMITS;
 import static org.frc5687.robot.Constants.DriveTrain.NUM_MODULES;
 
 import java.util.Optional;
 
 import org.frc5687.lib.control.SwerveHeadingController;
-import org.frc5687.lib.swerve.SwerveSetpoint;
-import org.frc5687.lib.swerve.SwerveSetpointGenerator;
-import org.frc5687.lib.swerve.SwerveSetpointGenerator.KinematicLimits;
 import org.frc5687.robot.Constants;
 import org.frc5687.robot.RobotMap;
 import org.frc5687.robot.RobotState;
@@ -20,10 +16,11 @@ import org.frc5687.robot.util.OutliersContainer;
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.hardware.Pigeon2;
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
-import com.pathplanner.lib.util.PIDConstants;
-import com.pathplanner.lib.util.ReplanningConfig;
+import com.pathplanner.lib.config.ModuleConfig;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.util.DriveFeedforwards;
+import com.pathplanner.lib.util.swerve.SwerveSetpoint;
+import org.frc5687.lib.swerve.SwerveSetpointGenerator;
 
 import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.math.controller.PIDController;
@@ -36,8 +33,9 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.math.util.Units;
+import edu.wpi.first.units.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
@@ -72,23 +70,22 @@ public class DriveTrain extends OutliersSubsystem {
      */
     public static class SystemIO {
         ChassisSpeeds desiredChassisSpeeds = new ChassisSpeeds(0.0, 0.0, 0.0);
-        SwerveModuleState[] measuredStates = new SwerveModuleState[] {
+        SwerveModuleState[] measuredStates = {
                 new SwerveModuleState(),
                 new SwerveModuleState(),
                 new SwerveModuleState(),
                 new SwerveModuleState()
         };
-        SwerveModulePosition[] measuredPositions = new SwerveModulePosition[] {
+        SwerveModulePosition[] measuredPositions = {
                 new SwerveModulePosition(),
                 new SwerveModulePosition(),
                 new SwerveModulePosition(),
                 new SwerveModulePosition()
         };
         Rotation2d heading = new Rotation2d(0.0);
-        double pitch = 0.0;
         Pose2d odometryPose = new Pose2d();
 
-        SwerveSetpoint setpoint = new SwerveSetpoint(new ChassisSpeeds(), new SwerveModuleState[4]);
+        SwerveSetpoint setpoint = new SwerveSetpoint(new ChassisSpeeds(), new SwerveModuleState[4], DriveFeedforwards.zeros(4));
     }
 
     // Order we define swerve modules in kinematics
@@ -99,7 +96,6 @@ public class DriveTrain extends OutliersSubsystem {
     private static final int NORTH_EAST_IDX = 3;
 
     private final SwerveSetpointGenerator _swerveSetpointGenerator;
-    private KinematicLimits _kinematicLimits = KINEMATIC_LIMITS;
 
     private final BaseStatusSignal[] _signals;
 
@@ -183,15 +179,26 @@ public class DriveTrain extends OutliersSubsystem {
                 _modules[SOUTH_EAST_IDX].getModuleLocation(),
                 _modules[NORTH_EAST_IDX].getModuleLocation());
 
+        // FIXME get real COF - xavier
+        var _config = new RobotConfig(
+            Units.Pounds.of(50.0),
+            Units.KilogramSquareMeters.of(9),
+            new ModuleConfig(
+                Constants.SwerveModule.WHEEL_RADIUS,
+                Constants.DriveTrain.MAX_MPS,
+                1.0,
+                DCMotor.getKrakenX60Foc(1),
+                Constants.SwerveModule.DRIVE_CONFIG.MAX_CURRENT, 1
+            ),
+            _modules[NORTH_WEST_IDX].getModuleLocation(),
+            _modules[SOUTH_WEST_IDX].getModuleLocation(),
+            _modules[SOUTH_EAST_IDX].getModuleLocation(),
+            _modules[NORTH_EAST_IDX].getModuleLocation());
+        
         _swerveSetpointGenerator = new SwerveSetpointGenerator(
-                _kinematics,
-                new Translation2d[] {
-                        _modules[NORTH_WEST_IDX].getModuleLocation(),
-                        _modules[SOUTH_WEST_IDX].getModuleLocation(),
-                        _modules[SOUTH_EAST_IDX].getModuleLocation(),
-                        _modules[NORTH_EAST_IDX].getModuleLocation()
-                });
-
+                _config,
+                DCMotor.getKrakenX60(1).freeSpeedRadPerSec * Constants.DriveTrain.MOTOR_LOAD_OUTPUT_PERCENTAGE / Constants.SwerveModule.GEAR_RATIO_STEER
+        );
         _headingController = new SwerveHeadingController(Constants.UPDATE_PERIOD);
 
         _poseController = new HolonomicDriveController(
@@ -214,34 +221,7 @@ public class DriveTrain extends OutliersSubsystem {
 
         readModules();
         setSetpointFromMeasuredModules();
-
-        // Configure AutoBuilder last
-        AutoBuilder.configureHolonomic(
-                _robotState::getEstimatedPose, // Robot pose supplier
-                _robotState::setEstimatedPose, // Method to reset odometry (will be called if your auto has a starting pose)
-                this::getMeasuredChassisSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-                this::setVelocity, // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds
-                new HolonomicPathFollowerConfig( // HolonomicPathFollowerConfig, this should likely live in your Constants class
-                        new PIDConstants(3.3, 0.0, 0.05), // Translation PID constants
-                        new PIDConstants(Constants.DriveTrain.HEADING_kP, Constants.DriveTrain.HEADING_kI, Constants.DriveTrain.HEADING_kD), // Rotation PID constants
-                        Constants.DriveTrain.MAX_MPS, // Max module speed, in m/s
-                        0.4, // Drive base radius in meters. Distance from robot center to furthest module.
-                        new ReplanningConfig() // Default path replanning config. See the API for the options here
-                ),
-                () -> {
-                    // Boolean supplier that controls when the path will be mirrored for the red alliance
-                    // This will flip the path being followed to the red side of the field.
-                    // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
-
-                    var alliance = DriverStation.getAlliance();
-                    if (alliance.isPresent()) {
-                        return alliance.get() == DriverStation.Alliance.Red;
-                    }
-                    return false;
-                },
-                this // Reference to this subsystem to set requirements
-        );
-
+        // here is where you would put the auto builder - xavier
     }
 
     protected void configureSignalFrequency(double frequency) {
@@ -297,7 +277,7 @@ public class DriveTrain extends OutliersSubsystem {
         _robotState.getWriteLock().lock();
         try {
             updateDesiredStates();
-            setModuleStates(_systemIO.setpoint.moduleStates);
+            setModuleStates(_systemIO.setpoint.moduleStates());
         } finally {
             _robotState.getWriteLock().unlock();
         }
@@ -323,7 +303,7 @@ public class DriveTrain extends OutliersSubsystem {
      * yolos the setpoint to 0 velocity. ignores acceleration limits and swerve stuff. just straight vibes
      */
     public void resetVelocityUnprotected() {
-        _systemIO.setpoint = new SwerveSetpoint(new ChassisSpeeds(), _systemIO.measuredStates);
+        _systemIO.setpoint = new SwerveSetpoint(new ChassisSpeeds(), _systemIO.measuredStates, DriveFeedforwards.zeros(4));
     }
 
     public boolean isFieldCentric() {
@@ -353,12 +333,19 @@ public class DriveTrain extends OutliersSubsystem {
                 twistVel.dy / Constants.UPDATE_PERIOD,
                 twistVel.dtheta / Constants.UPDATE_PERIOD);
 
-        SwerveSetpoint newSetpoint = _swerveSetpointGenerator.generateSetpoint(
-                _kinematicLimits,
-                _systemIO.setpoint,
-                updatedChassisSpeeds,
-                Constants.UPDATE_PERIOD); // FIXME unyolo this - xavier
-                _systemIO.setpoint = newSetpoint;
+        // SwerveSetpoint newSetpoint = _swerveSetpointGenerator.generateSetpoint(
+        //         _systemIO.setpoint,
+        //         updatedChassisSpeeds,
+        //         Constants.UPDATE_PERIOD); // FIXME unyolo this - xavier
+        // System.out.println("newSetpoint.vx = "+newSetpoint.robotRelativeSpeeds().vxMetersPerSecond);
+        // System.out.println("newSetpoint.vy = "+newSetpoint.robotRelativeSpeeds().vyMetersPerSecond);
+        // System.out.println("newSetpoint.omega = "+newSetpoint.robotRelativeSpeeds().omegaRadiansPerSecond);
+        // for (SwerveModuleState moduleState : newSetpoint.moduleStates()) {
+        //     System.out.println("newSetpoint.moduleState = "+moduleState);
+        // }
+
+        _systemIO.setpoint = new SwerveSetpoint(updatedChassisSpeeds, _kinematics.toSwerveModuleStates(updatedChassisSpeeds), DriveFeedforwards.zeros(4));
+
     }
 
     /* Module Control Start */
@@ -367,6 +354,7 @@ public class DriveTrain extends OutliersSubsystem {
             _systemIO.measuredStates[module] = _modules[module].getState();
             _systemIO.measuredPositions[module] = _modules[module].getPosition();
         }
+
     }
 
     public void setModuleStates(SwerveModuleState[] states) {
@@ -380,31 +368,21 @@ public class DriveTrain extends OutliersSubsystem {
     }
 
     public void setSetpointFromMeasuredModules() {
-        System.arraycopy(_systemIO.measuredStates, 0, _systemIO.setpoint.moduleStates, 0, _modules.length);
-        _systemIO.setpoint.chassisSpeeds = _kinematics.toChassisSpeeds(_systemIO.setpoint.moduleStates);
+        System.arraycopy(_systemIO.measuredStates, 0, _systemIO.setpoint.moduleStates(), 0, _modules.length);
+        var newSetpoint = new SwerveSetpoint(getMeasuredChassisSpeeds(), _systemIO.measuredStates, DriveFeedforwards.zeros(4));
+        _systemIO.setpoint = newSetpoint;
     }
 
     public void orientModules(Rotation2d moduleAngle) {
         for (int module = 0; module < _modules.length; module++) {
-            _systemIO.setpoint.moduleStates[module] = new SwerveModuleState(0.0, moduleAngle);
+            _systemIO.setpoint.moduleStates()[module] = new SwerveModuleState(0.0, moduleAngle);
         }
     }
     /* Module Control End */
 
-    /* Kinematics Stuff Start */
     public SwerveDriveKinematics getKinematics() {
         return _kinematics;
     }
-
-    /* Kinematic limit for the Setpoint Generator */
-    public void setKinematicLimits(KinematicLimits limits) {
-        _kinematicLimits = limits;
-    }
-
-    public KinematicLimits getKinematicLimits() {
-        return _kinematicLimits;
-    }
-    /* Kinematics End */
 
     @Override
     public void updateDashboard() {
@@ -445,10 +423,6 @@ public class DriveTrain extends OutliersSubsystem {
         return _systemIO.desiredChassisSpeeds;
     }
 
-    public double getDesiredSpeed() {
-        return Math.hypot(getDesiredChassisSpeeds().vxMetersPerSecond, getDesiredChassisSpeeds().vyMetersPerSecond);
-    }
-
     public double getSpeed() {
         return Math.hypot(getMeasuredChassisSpeeds().vxMetersPerSecond, getMeasuredChassisSpeeds().vyMetersPerSecond);
     }    
@@ -457,28 +431,18 @@ public class DriveTrain extends OutliersSubsystem {
         return _systemIO.heading.getRadians();
     }
 
-    public double getPitch() {
-        return _systemIO.pitch;
-    }
-
     public Rotation2d getHeading() {
         return _systemIO.heading;
     }
 
     public void zeroGyroscope() {
-        _yawOffset = _imu.getYaw().getValue();
+        _yawOffset = _imu.getYaw().getValue().in(Units.Degrees);
         readIMU();
     }
 
-    public void setGyroscopeAngle(Rotation2d rotation) {
-        _yawOffset = _imu.getYaw().getValue() + rotation.getDegrees();
-        readIMU();
-    }
     public void readIMU() {
-        double yawDegrees = BaseStatusSignal.getLatencyCompensatedValue(_imu.getYaw(),
-                _imu.getAngularVelocityZDevice());
+        double yawDegrees = BaseStatusSignal.getLatencyCompensatedValue(_imu.getYaw(), _imu.getAngularVelocityZDevice()).in(Units.Degrees);
         double yawAllianceOffsetDegrees = isRedAlliance() ? 180.0 : 0;
         _systemIO.heading = Rotation2d.fromDegrees(yawDegrees - _yawOffset + yawAllianceOffsetDegrees);
-        _systemIO.pitch = Units.degreesToRadians(_imu.getPitch().getValue());
     }
 }
