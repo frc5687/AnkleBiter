@@ -11,13 +11,17 @@ import org.frc5687.lib.control.SwerveHeadingController;
 import org.frc5687.robot.Constants;
 import org.frc5687.robot.RobotMap;
 import org.frc5687.robot.RobotState;
+import org.frc5687.robot.util.OculusProcessor;
 import org.frc5687.robot.util.OutliersContainer;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.hardware.Pigeon2;
+import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.config.ModuleConfig;
+import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.swerve.SwerveSetpoint;
 import org.frc5687.lib.swerve.SwerveSetpointGenerator;
@@ -110,10 +114,9 @@ public class DriveTrain extends OutliersSubsystem {
     private final Pigeon2 _imu;
     private double _yawOffset;
 
-    private Pose2d _hoverGoal;
-
     private final SystemIO _systemIO;
     private final HolonomicDriveController _poseController;
+    public final OculusProcessor _oculusProcessor;
 
     private RobotState _robotState = RobotState.getInstance();
 
@@ -129,6 +132,8 @@ public class DriveTrain extends OutliersSubsystem {
         // configure our system IO and pigeon;
         _imu = imu;
         _systemIO = new SystemIO();
+
+        _oculusProcessor = new OculusProcessor();
 
         _controlState = ControlState.NEUTRAL;
 
@@ -214,14 +219,36 @@ public class DriveTrain extends OutliersSubsystem {
                             Constants.DriveTrain.MAX_ANG_VEL,
                             Constants.DriveTrain.MAX_ANG_ACC)));
 
-        _hoverGoal = new Pose2d();
         _controlState = ControlState.MANUAL;
 
         zeroGyroscope();
 
         readModules();
         setSetpointFromMeasuredModules();
-        // here is where you would put the auto builder - xavier
+        AutoBuilder.configure(
+            _oculusProcessor::getRobotPose, // Robot pose supplier
+            _oculusProcessor::setRobotPose, // Method to reset odometry (will be called if your auto has a starting pose)
+            this::getMeasuredChassisSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+            (speeds, feedforwards) -> setVelocity(speeds), // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also optionally outputs individual module feedforwards
+            new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
+                    new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
+                    new PIDConstants(5.0, 0.0, 0.0) // Rotation PID constants
+            ),
+            _config, // The robot configuration
+            () -> {
+                // Boolean supplier that controls when the path will be mirrored for the red alliance
+                // This will flip the path being followed to the red side of the field.
+                // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+
+                var alliance = DriverStation.getAlliance();
+                if (alliance.isPresent()) {
+                return alliance.get() == DriverStation.Alliance.Red;
+                }
+                return false;
+            },
+            this // Reference to this subsystem to set requirements
+        );
+
     }
 
     protected void configureSignalFrequency(double frequency) {
@@ -266,7 +293,7 @@ public class DriveTrain extends OutliersSubsystem {
     public void setVelocityPose(Pose2d pose) {
         readIMU();
         ChassisSpeeds speeds = _poseController.calculate(
-                _robotState.getEstimatedPose(), pose, 0.0, _systemIO.heading);
+                _oculusProcessor.getRobotPose(), pose, 0.0, _systemIO.heading);
         _headingController.goToHeading(pose.getRotation());
         speeds.omegaRadiansPerSecond = _headingController.getRotationCorrection(getHeading());
         _systemIO.desiredChassisSpeeds = speeds;
@@ -402,17 +429,6 @@ public class DriveTrain extends OutliersSubsystem {
         }
         metric("Alliance", false);
         return false;
-    }
-
-    public Pose2d getHoverGoal() {
-        return _hoverGoal;
-    }
-
-    public void setHoverGoal(Pose2d pose) {
-        _hoverGoal = pose;
-        metric("hoverGoal x", _hoverGoal.getX());
-        metric("hoverGoal y", _hoverGoal.getY());
-        metric("hoverGoal rotation degrees", _hoverGoal.getRotation().getDegrees());
     }
 
     public ChassisSpeeds getMeasuredChassisSpeeds() {

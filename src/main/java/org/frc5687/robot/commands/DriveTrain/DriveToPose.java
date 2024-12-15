@@ -21,7 +21,6 @@ public class DriveToPose extends OutliersCommand {
     @Override
     public void initialize() {
         _driveTrain.setControlState(ControlState.POSITION);
-        _driveTrain.setHoverGoal(_goalPose2d);
         super.initialize();
     }
 

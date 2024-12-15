@@ -1,6 +1,7 @@
 /* Team 5687 (C)2021-2022 */
 package org.frc5687.robot;
 
+import java.io.IOException;
 import java.util.Optional;
 
 import org.frc5687.robot.commands.OutliersCommand;
@@ -10,17 +11,22 @@ import org.frc5687.robot.subsystems.OutliersSubsystem;
 import org.frc5687.robot.util.OculusProcessor;
 import org.frc5687.robot.util.OutliersContainer;
 import org.frc5687.robot.util.PhotonProcessor;
+import org.json.simple.parser.ParseException;
 import org.photonvision.EstimatedRobotPose;
 
 import com.ctre.phoenix6.configs.MountPoseConfigs;
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.Pigeon2;
+import com.pathplanner.lib.auto.AutoBuilder;
 // import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.util.FileVersionException;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -35,7 +41,6 @@ public class RobotContainer extends OutliersContainer {
     private Pigeon2 _imu;
     private Robot _robot;
     private DriveTrain _driveTrain;
-    private OculusProcessor _oculusProcessor;
     private Field2d _field;
 
     private RobotState _robotState = RobotState.getInstance();
@@ -60,8 +65,7 @@ public class RobotContainer extends OutliersContainer {
 
         _driveTrain = new DriveTrain(this, _imu);
 
-        _photonProcessor = new PhotonProcessor(AprilTagFields.k2024Crescendo.loadAprilTagLayoutField());
-        _oculusProcessor = new OculusProcessor(_driveTrain);
+        // _photonProcessor = new PhotonProcessor(AprilTagFields.k2024Crescendo.loadAprilTagLayoutField());
         // Grab instance such that we can initalize with drivetrain and processor
         _robotState.initializeRobotState(_driveTrain);
 
@@ -82,11 +86,12 @@ public class RobotContainer extends OutliersContainer {
         _robotState.periodic();
         _field.setRobotPose(_robotState.getEstimatedPose());
 
-        var oculus = _field.getObject("notes");
+        var oculus = _field.getObject("oculus");
 
-        oculus.setPose(_oculusProcessor.getRobotPose());
-        SmartDashboard.putNumber("oculus x", _oculusProcessor.getRobotPose().getX());
-        SmartDashboard.putNumber("oculus y", _oculusProcessor.getRobotPose().getY());
+        oculus.setPose(_driveTrain._oculusProcessor.getRobotPose());
+        SmartDashboard.putNumber("oculus x", _driveTrain._oculusProcessor.getRobotPose().getX());
+        SmartDashboard.putNumber("oculus y", _driveTrain._oculusProcessor.getRobotPose().getY());
+
         // _field.getObject("futurePose").setPose(_robotState.calculateAdjustedRPMAndAngleToTargetPose());
         // Optional<Pose2d> optionalClosestNote = _robotState.getClosestNote();
         // if (optionalClosestNote.isPresent()) {
@@ -127,14 +132,28 @@ public class RobotContainer extends OutliersContainer {
     }
 
     public Command getAutoCommand() {
-        // // Follow a path
-        // // Load the path you want to follow using its name in the GUI
-        // PathPlannerPath path = PathPlannerPath.fromPathFile("C3_TO_SHOOT_TO_F3");
+        // Follow a path
+        // Load the path you want to follow using its name in the GUI
+        PathPlannerPath path;
+        try {
+            path = PathPlannerPath.fromPathFile("Example Path");
+            return AutoBuilder.followPath(path);
 
+        } catch (FileVersionException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (ParseException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        
         // // Create a path following command using AutoBuilder. This will also trigger
         // event markers.
-        // return AutoBuilder.followPath(path);
-        // // return _autoChooser.getSelected();
+
+        // return _autoChooser.getSelected();
 
         /*
          * Warning

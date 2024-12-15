@@ -4,11 +4,8 @@ import org.frc5687.robot.subsystems.DriveTrain;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.DoubleSubscriber;
 import edu.wpi.first.networktables.FloatArraySubscriber;
@@ -16,7 +13,6 @@ import edu.wpi.first.networktables.IntegerPublisher;
 import edu.wpi.first.networktables.IntegerSubscriber;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class OculusProcessor {
 
@@ -33,10 +29,10 @@ public class OculusProcessor {
   public FloatArraySubscriber questQuaternion = nt4Table.getFloatArrayTopic("quaternion").subscribe(new float[]{0.0f, 0.0f, 0.0f, 0.0f});
   public FloatArraySubscriber questEulerAngles = nt4Table.getFloatArrayTopic("eulerAngles").subscribe(new float[]{0.0f, 0.0f, 0.0f});
 
-  private DriveTrain _driveTrain;
+  private Transform2d _fieldToOculusZero;
 
-  public OculusProcessor(DriveTrain driveTrain){
-    _driveTrain = driveTrain;
+  public OculusProcessor(){
+    this._fieldToOculusZero = Transform2d.kZero;
   }
   public Transform2d robotToOculus =
              new Transform2d(
@@ -46,32 +42,38 @@ public class OculusProcessor {
   
   public float yaw_offset = 0.0f;
 
-  public float getOculusYaw() {
+  private float getOculusYaw() {
     float[] eulerAngles = questEulerAngles.get();
     return eulerAngles[1] - yaw_offset;
   }
 
-  public Translation2d getOculusPosition() {
+  private Translation2d getOculusPosition() {
     float[] oculusPosition = questPosition.get();
     return new Translation2d(-oculusPosition[2], oculusPosition[0]);
   }
 
-  public Pose2d getOculusPose() {
-    return new Pose2d(getOculusPosition(), Rotation2d.fromDegrees(-getOculusYaw()));
+  public Transform2d getNTPose() {
+    return new Transform2d(getOculusPosition(), Rotation2d.fromDegrees(-getOculusYaw()));
+  }
+
+  private Transform2d getFieldToOculus() {
+    return _fieldToOculusZero.plus(getNTPose());
   }
 
   public Pose2d getRobotPose() {
     var oculusToRobot = robotToOculus.inverse();
-    Pose2d robotPose = getOculusPose().transformBy(oculusToRobot);
-    return robotPose;
+    Transform2d fieldToRobot = getFieldToOculus().plus(oculusToRobot);
+    return new Pose2d(fieldToRobot.getTranslation(), fieldToRobot.getRotation());
   }
 
-  // public Pose2d getOculusPose(){
-  // //   if (_driveTrain.isRedAlliance()) {
-  // //     Pose2d initialPose = (firstPath.flipPath().getPreviewStartingHolonomicPose());
-  // // } else {
-  // //     Pose2d initialPose = (firstPath.getPreviewStartingHolonomicPose());
-  // // }
-  // return 
-  // }
+  public void setRobotPose(Pose2d robotPose) {
+    Transform2d fieldToRobot = new Transform2d(Pose2d.kZero, robotPose);
+    Transform2d fieldToOculus = fieldToRobot.plus(robotToOculus);
+    setOculusPose(fieldToOculus);
+  }
+
+  private void setOculusPose(Transform2d fieldToOculus) {
+    _fieldToOculusZero = fieldToOculus.plus(getNTPose().inverse());
+  }
+
 }

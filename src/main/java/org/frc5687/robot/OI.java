@@ -5,17 +5,19 @@ import static org.frc5687.robot.util.Helpers.applyDeadband;
 
 import org.frc5687.lib.oi.AxisButton;
 import org.frc5687.lib.oi.Gamepad;
+import org.frc5687.robot.commands.DriveTrain.DriveToPose;
 import org.frc5687.robot.commands.DriveTrain.SnapTo;
 import org.frc5687.robot.commands.DriveTrain.ZeroIMU;
 import org.frc5687.robot.subsystems.DriveTrain;
 import org.frc5687.robot.util.OutliersProxy;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 
 public class OI extends OutliersProxy {
     protected Gamepad _driverGamepad;
@@ -69,6 +71,8 @@ public class OI extends OutliersProxy {
         _driverGamepad.getXButton().onTrue(new SnapTo(drivetrain, new Rotation2d(3 * Math.PI / 2)));
 
         _driverGamepad.getStartButton().onTrue(new ZeroIMU(drivetrain));
+        _driverGamepad.getLeftBumper().onTrue(new InstantCommand(()->{ drivetrain._oculusProcessor.setRobotPose(Pose2d.kZero); }));
+        _driverGamepad.getRightBumper().whileTrue(new DriveToPose(drivetrain, new Pose2d(1,1,Rotation2d.kZero)));
     }
 
     
