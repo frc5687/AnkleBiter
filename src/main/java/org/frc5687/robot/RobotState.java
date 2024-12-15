@@ -159,10 +159,10 @@ public class RobotState {
 
     public void periodic() {
         updateOdometry();
-
-        if (_useVisionUpdates) {
-            updateWithVision();
-        }
+        
+        // if (_useVisionUpdates) {
+        //     updateWithVision();
+        // }
 
         // _visionAngle = getAngleToTagFromVision(getSpeakerTargetTagId());
         // _visionDistance = getDistanceToTagFromVision(getSpeakerTargetTagId());
