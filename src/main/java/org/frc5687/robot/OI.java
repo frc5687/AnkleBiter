@@ -71,11 +71,9 @@ public class OI extends OutliersProxy {
         _driverGamepad.getXButton().onTrue(new SnapTo(drivetrain, new Rotation2d(3 * Math.PI / 2)));
 
         _driverGamepad.getStartButton().onTrue(new ZeroIMU(drivetrain));
-        _driverGamepad.getLeftBumper().onTrue(new InstantCommand(()->{ drivetrain._oculusProcessor.setRobotPose(Pose2d.kZero); }));
+        _driverGamepad.getLeftBumper().onTrue(new InstantCommand(()->{ drivetrain._oculusProcessor.setRobotPose(new Pose2d(0.0, 0.0, drivetrain.getHeading())); }));
         _driverGamepad.getRightBumper().whileTrue(new DriveToPose(drivetrain, new Pose2d(1,1,Rotation2d.kZero)));
     }
-
-    
 
     public boolean zeroIMU() {
         return _driverGamepad.getStartButton().getAsBoolean();
@@ -84,7 +82,6 @@ public class OI extends OutliersProxy {
     public boolean isShooting() {
         return _driverRightTrigger.getAsBoolean();
     }
-
 
     public double getDriveY() {
         double speed = -getSpeedFromAxis(_driverGamepad, Gamepad.Axes.LEFT_Y.getNumber());
