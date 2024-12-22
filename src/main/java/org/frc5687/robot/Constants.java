@@ -57,8 +57,7 @@ public class Constants {
             STEER_CONFIG.CURRENT_DEADBAND = 0.1;
         }
 
-        // TODO make this final again. i was tuning pid - xavier
-        public static OutliersTalon.ClosedLoopConfiguration DRIVE_CONTROLLER_CONFIG = new OutliersTalon.ClosedLoopConfiguration();
+        public static final OutliersTalon.ClosedLoopConfiguration DRIVE_CONTROLLER_CONFIG = new OutliersTalon.ClosedLoopConfiguration();
 
         static {
             DRIVE_CONTROLLER_CONFIG.kP = 10.0;

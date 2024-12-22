@@ -94,15 +94,6 @@ public class RobotContainer extends OutliersContainer {
             westCamPose.setPose(result.get().estimatedPose.toPose2d());
         }
 
-        // _field.getObject("futurePose").setPose(_robotState.calculateAdjustedRPMAndAngleToTargetPose());
-        // Optional<Pose2d> optionalClosestNote = _robotState.getClosestNote();
-        // if (optionalClosestNote.isPresent()) {
-        //     Pose2d notePose = optionalClosestNote.get();
-        //     _field.getObject("note").setPose(notePose);
-        // } else {
-        //     // TODO remove note from glass
-        // }
-
         SmartDashboard.putData(_field);
     }
 
@@ -141,14 +132,7 @@ public class RobotContainer extends OutliersContainer {
             path = PathPlannerPath.fromPathFile("Example Path");
             return AutoBuilder.followPath(path);
 
-        } catch (FileVersionException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (ParseException e) {
-            // TODO Auto-generated catch block
+        } catch (FileVersionException | IOException | ParseException e) {
             e.printStackTrace();
         }
         
