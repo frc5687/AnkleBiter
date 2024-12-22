@@ -60,21 +60,11 @@ public class Drive extends OutliersCommand {
 
         Rotation2d rotation = _driveTrain.isRedAlliance() ? _driveTrain.getHeading().plus(new Rotation2d(Math.PI)) : _driveTrain.getHeading();
 
+        ChassisSpeeds commandedSpeeds = new ChassisSpeeds(vx, vy, rot + controllerPower);
         if (_driveTrain.isFieldCentric()) {
-            _driveTrain.setVelocity(
-                ChassisSpeeds.fromFieldRelativeSpeeds(
-                    vx, vy, rot + controllerPower,
-                    rotation
-                )
-            );
-        } else {
-            _driveTrain.setVelocity(
-                ChassisSpeeds.fromRobotRelativeSpeeds(
-                    vx, vy, rot + controllerPower,
-                    rotation
-                )
-            );
+            commandedSpeeds.toFieldRelativeSpeeds(rotation);
         }
+        _driveTrain.setVelocity(commandedSpeeds);
     }
 
     @Override
