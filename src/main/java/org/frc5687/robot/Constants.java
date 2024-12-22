@@ -7,13 +7,9 @@ import org.frc5687.robot.subsystems.SwerveModule.ModuleConfiguration;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 // import edu.wpi.first.math.util.Units;
-import edu.wpi.first.units.DistanceUnit;
-import edu.wpi.first.units.Measure;
 
 public class Constants {
     public static final int TICKS_PER_UPDATE = 1; // This is for the smartdashboard. 1 means it will update at the rate of the robot code, 5 will update every 5th loop and so on.

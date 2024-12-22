@@ -1,8 +1,6 @@
 
 package org.frc5687.robot.subsystems;
 
-import org.frc5687.robot.Constants;
-import org.frc5687.robot.RobotMap;
 import org.frc5687.robot.util.OutliersContainer;
 
 import com.ctre.phoenix6.signals.InvertedValue;
