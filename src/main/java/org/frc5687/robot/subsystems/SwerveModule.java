@@ -1,7 +1,6 @@
 /* Team 5687  */
 package org.frc5687.robot.subsystems;
 
-import static org.frc5687.robot.Constants.SwerveModule.DRIVE_CONTROLLER_CONFIG;
 import org.frc5687.lib.drivers.OutliersTalon;
 import org.frc5687.robot.Constants;
 
@@ -134,14 +133,14 @@ public class SwerveModule {
     public void setGoalState(SwerveModuleState state) {
         // optimize goal state
         Rotation2d currentAngle = getCanCoderAngle();
-        SwerveModuleState optimizedState = SwerveModuleState.optimize(state, currentAngle);
+        state.optimize(currentAngle);
         // https://docs.wpilib.org/en/stable/docs/software/kinematics-and-odometry/swerve-drive-kinematics.html#cosine-compensation
-        optimizedState.speedMetersPerSecond *= optimizedState.angle.minus(currentAngle).getCos();
-        _goalState = optimizedState;
+        state.speedMetersPerSecond *= state.angle.minus(currentAngle).getCos();
+        _goalState = state;
 
         // send motor setpoints
-        _driveMotor.setControl(_velocityTorqueCurrentFOC.withVelocity(optimizedState.speedMetersPerSecond * Constants.SwerveModule.GEAR_RATIO_DRIVE * _rotPerMet));
-        _steeringMotor.setPositionVoltage(optimizedState.angle.getRotations());
+        _driveMotor.setControl(_velocityTorqueCurrentFOC.withVelocity(state.speedMetersPerSecond * Constants.SwerveModule.GEAR_RATIO_DRIVE * _rotPerMet));
+        _steeringMotor.setPositionVoltage(state.angle.getRotations());
     }
 
     public SwerveModuleState getState() {
