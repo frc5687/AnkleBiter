@@ -9,7 +9,6 @@ import org.frc5687.robot.commands.DriveTrain.DriveToPose;
 import org.frc5687.robot.commands.DriveTrain.SnapTo;
 import org.frc5687.robot.commands.DriveTrain.ZeroIMU;
 import org.frc5687.robot.subsystems.DriveTrain;
-import org.frc5687.robot.util.OutliersProxy;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -19,7 +18,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
-public class OI extends OutliersProxy {
+public class OI {
     protected Gamepad _driverGamepad;
     protected Gamepad _operatorGamepad;
     protected Gamepad _buttonpad;
@@ -103,12 +102,6 @@ public class OI extends OutliersProxy {
 
     protected double getSpeedFromAxis(Joystick gamepad, int axisNumber) {
         return gamepad.getRawAxis(axisNumber);
-    }
-
-    @Override
-    public void updateDashboard() {
-        // metric("Raw x", xIn);
-        // metric("Raw y", yIn);
     }
 
     public void rumbleDriver() {
