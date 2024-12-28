@@ -8,6 +8,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 // import edu.wpi.first.math.util.Units;
 
@@ -37,7 +38,7 @@ public class Constants {
 
             DRIVE_CONFIG.MAX_VOLTAGE = 12.0;
 
-            DRIVE_CONFIG.MAX_CURRENT = 120; // Max control requeset current
+            DRIVE_CONFIG.MAX_CURRENT = 120; // Max control request current
             DRIVE_CONFIG.CURRENT_DEADBAND = 0.1;
         }
 
@@ -123,9 +124,7 @@ public class Constants {
         public static final double MAX_KRAKEN_FOC_RPM = 5800.0 * MOTOR_LOAD_OUTPUT_PERCENTAGE;
         public static final double MAX_KRAKEN_FOC_TORQUE = 1.552; // This is from a 80 amp current limit
 
-        public static final double MAX_MPS = (//FIXME: REMOVE THIS :3
-            Units.rotationsPerMinuteToRadiansPerSecond(MAX_KRAKEN_FOC_RPM) 
-            / SwerveModule.GEAR_RATIO_DRIVE) * SwerveModule.WHEEL_RADIUS;
+        public static final double MAX_MPS = DCMotor.getKrakenX60Foc(1).withReduction(Constants.SwerveModule.GEAR_RATIO_DRIVE).freeSpeedRadPerSec * SwerveModule.WHEEL_RADIUS;
 
         public static final double MAX_MPSS = 
             (MAX_KRAKEN_FOC_TORQUE * 4 * SwerveModule.GEAR_RATIO_DRIVE) / (ROBOT_WEIGHT * SwerveModule.WHEEL_RADIUS);
