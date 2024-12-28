@@ -119,15 +119,8 @@ public class Constants {
         public static final double SWERVE_WE_POS = WIDTH / 2.0;
 
         public static final double ROBOT_RADIUS = Math.sqrt(WIDTH * WIDTH + LENGTH * LENGTH) / 2.0;
-        public static final double MOTOR_LOAD_OUTPUT_PERCENTAGE = 0.8; // Assume that there is and efficiency drop under load
-        public static final double MAX_FALCON_FOC_RPM = 6080.0 * MOTOR_LOAD_OUTPUT_PERCENTAGE;
-        public static final double MAX_KRAKEN_FOC_RPM = 5800.0 * MOTOR_LOAD_OUTPUT_PERCENTAGE;
-        public static final double MAX_KRAKEN_FOC_TORQUE = 1.552; // This is from a 80 amp current limit
 
         public static final double MAX_MPS = DCMotor.getKrakenX60Foc(1).withReduction(Constants.SwerveModule.GEAR_RATIO_DRIVE).freeSpeedRadPerSec * SwerveModule.WHEEL_RADIUS;
-
-        public static final double MAX_MPSS = 
-            (MAX_KRAKEN_FOC_TORQUE * 4 * SwerveModule.GEAR_RATIO_DRIVE) / (ROBOT_WEIGHT * SwerveModule.WHEEL_RADIUS);
 
         public static final double MAX_ANG_VEL = 2.0 * Math.PI; // Max rotation rate of robot (rads/s)
         public static final double MAX_ANG_ACC = 2.0 * Math.PI; // Max angular acceleration of robot (rads/s^2)
