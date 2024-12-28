@@ -24,7 +24,7 @@ import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.util.DriveFeedforwards;
 import com.pathplanner.lib.util.swerve.SwerveSetpoint;
-import org.frc5687.lib.swerve.SwerveSetpointGenerator;
+import com.pathplanner.lib.util.swerve.SwerveSetpointGenerator;
 
 import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.math.controller.PIDController;
@@ -87,16 +87,15 @@ public class DriveTrain extends OutliersSubsystem {
         };
         Rotation2d heading = new Rotation2d(0.0);
         Pose2d odometryPose = new Pose2d();
-
         SwerveSetpoint setpoint = new SwerveSetpoint(new ChassisSpeeds(), new SwerveModuleState[4], DriveFeedforwards.zeros(4));
     }
 
     // Order we define swerve modules in kinematics
     private final SwerveModule[] _modules;
     private static final int NORTH_WEST_IDX = 0;
-    private static final int SOUTH_WEST_IDX = 1;
-    private static final int SOUTH_EAST_IDX = 2;
-    private static final int NORTH_EAST_IDX = 3;
+    private static final int NORTH_EAST_IDX = 1;
+    private static final int SOUTH_WEST_IDX = 2;
+    private static final int SOUTH_EAST_IDX = 3;
 
     private final SwerveSetpointGenerator _swerveSetpointGenerator;
 
@@ -144,6 +143,11 @@ public class DriveTrain extends OutliersSubsystem {
                 RobotMap.CAN.TALONFX.NORTH_WEST_ROTATION,
                 RobotMap.CAN.TALONFX.NORTH_WEST_TRANSLATION,
                 RobotMap.CAN.CANCODER.ENCODER_NW);
+        _modules[NORTH_EAST_IDX] = new SwerveModule(
+                Constants.DriveTrain.NORTH_EAST_CONFIG,
+                RobotMap.CAN.TALONFX.NORTH_EAST_ROTATION,
+                RobotMap.CAN.TALONFX.NORTH_EAST_TRANSLATION,
+                RobotMap.CAN.CANCODER.ENCODER_NE);
         _modules[SOUTH_WEST_IDX] = new SwerveModule(
                 Constants.DriveTrain.SOUTH_WEST_CONFIG,
                 RobotMap.CAN.TALONFX.SOUTH_WEST_ROTATION,
@@ -154,11 +158,6 @@ public class DriveTrain extends OutliersSubsystem {
                 RobotMap.CAN.TALONFX.SOUTH_EAST_ROTATION,
                 RobotMap.CAN.TALONFX.SOUTH_EAST_TRANSLATION,
                 RobotMap.CAN.CANCODER.ENCODER_SE);
-        _modules[NORTH_EAST_IDX] = new SwerveModule(
-                Constants.DriveTrain.NORTH_EAST_CONFIG,
-                RobotMap.CAN.TALONFX.NORTH_EAST_ROTATION,
-                RobotMap.CAN.TALONFX.NORTH_EAST_TRANSLATION,
-                RobotMap.CAN.CANCODER.ENCODER_NE);
 
         // module CAN bus sensor outputs (position, velocity of each motor) all of them
         // are called once per loop at the start.
@@ -178,10 +177,11 @@ public class DriveTrain extends OutliersSubsystem {
         configureSignalFrequency(250);
 
         _kinematics = new SwerveDriveKinematics(
-                _modules[NORTH_WEST_IDX].getModuleLocation(),
-                _modules[SOUTH_WEST_IDX].getModuleLocation(),
-                _modules[SOUTH_EAST_IDX].getModuleLocation(),
-                _modules[NORTH_EAST_IDX].getModuleLocation());
+            _modules[NORTH_WEST_IDX].getModuleLocation(),
+            _modules[NORTH_EAST_IDX].getModuleLocation(),
+            _modules[SOUTH_WEST_IDX].getModuleLocation(),
+            _modules[SOUTH_EAST_IDX].getModuleLocation()
+        );
 
         // FIXME get real COF - xavier
         var _config = new RobotConfig(
@@ -191,13 +191,13 @@ public class DriveTrain extends OutliersSubsystem {
                 Constants.SwerveModule.WHEEL_RADIUS,
                 Constants.DriveTrain.MAX_MPS,
                 1.0,
-                DCMotor.getKrakenX60Foc(1),
+                DCMotor.getKrakenX60Foc(1).withReduction(Constants.SwerveModule.GEAR_RATIO_DRIVE),
                 Constants.SwerveModule.DRIVE_CONFIG.MAX_CURRENT, 1
             ),
-            _modules[NORTH_WEST_IDX].getModuleLocation(),
+            _modules[NORTH_WEST_IDX].getModuleLocation(), // FL, FR, BL, BR order
+            _modules[NORTH_EAST_IDX].getModuleLocation(),
             _modules[SOUTH_WEST_IDX].getModuleLocation(),
-            _modules[SOUTH_EAST_IDX].getModuleLocation(),
-            _modules[NORTH_EAST_IDX].getModuleLocation());
+            _modules[SOUTH_EAST_IDX].getModuleLocation());
         
         _swerveSetpointGenerator = new SwerveSetpointGenerator(
                 _config,
@@ -329,7 +329,7 @@ public class DriveTrain extends OutliersSubsystem {
      * yolos the setpoint to 0 velocity. ignores acceleration limits and swerve stuff. just straight vibes
      */
     public void resetVelocityUnprotected() {
-        _systemIO.setpoint = new SwerveSetpoint(new ChassisSpeeds(), _systemIO.measuredStates, DriveFeedforwards.zeros(4));
+        _systemIO.setpoint = new SwerveSetpoint(new ChassisSpeeds(1.0, 0.0, 0.0), _systemIO.measuredStates, DriveFeedforwards.zeros(4));
     }
 
     public boolean isFieldCentric() {
@@ -359,10 +359,10 @@ public class DriveTrain extends OutliersSubsystem {
                 twistVel.dy / Constants.UPDATE_PERIOD,
                 twistVel.dtheta / Constants.UPDATE_PERIOD);
 
-        // SwerveSetpoint newSetpoint = _swerveSetpointGenerator.generateSetpoint(
-        //         _systemIO.setpoint,
-        //         updatedChassisSpeeds,
-        //         Constants.UPDATE_PERIOD); // FIXME unyolo this - xavier
+        SwerveSetpoint newSetpoint = _swerveSetpointGenerator.generateSetpoint(
+                _systemIO.setpoint,
+                updatedChassisSpeeds,
+                Constants.UPDATE_PERIOD);
         // System.out.println("newSetpoint.vx = "+newSetpoint.robotRelativeSpeeds().vxMetersPerSecond);
         // System.out.println("newSetpoint.vy = "+newSetpoint.robotRelativeSpeeds().vyMetersPerSecond);
         // System.out.println("newSetpoint.omega = "+newSetpoint.robotRelativeSpeeds().omegaRadiansPerSecond);
@@ -370,7 +370,8 @@ public class DriveTrain extends OutliersSubsystem {
         //     System.out.println("newSetpoint.moduleState = "+moduleState);
         // }
 
-        _systemIO.setpoint = new SwerveSetpoint(updatedChassisSpeeds, _kinematics.toSwerveModuleStates(updatedChassisSpeeds), DriveFeedforwards.zeros(4));
+        _systemIO.setpoint  = newSetpoint;
+        // = new SwerveSetpoint(updatedChassisSpeeds, _kinematics.toSwerveModuleStates(updatedChassisSpeeds), DriveFeedforwards.zeros(4));
 
     }
 
