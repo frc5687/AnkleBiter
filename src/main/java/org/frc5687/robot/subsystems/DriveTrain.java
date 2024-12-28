@@ -183,6 +183,9 @@ public class DriveTrain extends OutliersSubsystem {
             _modules[SOUTH_EAST_IDX].getModuleLocation()
         );
 
+        _robotState.initializeRobotState(this);
+        _robotState.start();
+
         // FIXME get real COF - xavier
         var _config = new RobotConfig(
             Units.Pounds.of(50.0),
@@ -201,7 +204,7 @@ public class DriveTrain extends OutliersSubsystem {
         
         _swerveSetpointGenerator = new SwerveSetpointGenerator(
                 _config,
-                DCMotor.getKrakenX60(1).freeSpeedRadPerSec * Constants.DriveTrain.MOTOR_LOAD_OUTPUT_PERCENTAGE / Constants.SwerveModule.GEAR_RATIO_STEER
+                (DCMotor.getKrakenX60(1).freeSpeedRadPerSec / Constants.SwerveModule.GEAR_RATIO_STEER) * 0.6 // don't push the steer motor to its absolute limits :)
         );
         _headingController = new SwerveHeadingController(Constants.UPDATE_PERIOD);
 
@@ -225,10 +228,10 @@ public class DriveTrain extends OutliersSubsystem {
         readModules();
         setSetpointFromMeasuredModules();
         AutoBuilder.configure(
-            _oculusProcessor::getRobotPose, // Robot pose supplier
-            _oculusProcessor::setRobotPose, // Method to reset odometry (will be called if your auto has a starting pose)
+            _robotState::getEstimatedPose, // Robot pose supplier
+            _robotState::setEstimatedPose, // Method to reset odometry (will be called if your auto has a starting pose)
             this::getMeasuredChassisSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-            (speeds, feedforwards) -> setVelocity(speeds), // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also optionally outputs individual module feedforwards
+            (speeds, feedforwards) -> {System.out.println("commanded speeds: "+speeds);setVelocity(speeds);}, // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also optionally outputs individual module feedforwards
             new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
                     new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
                     new PIDConstants(5.0, 0.0, 0.0) // Rotation PID constants

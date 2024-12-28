@@ -26,8 +26,8 @@ public class Constants {
         public static final OutliersTalon.Configuration STEER_CONFIG = new OutliersTalon.Configuration();
 
         public static final double WHEEL_RADIUS = 0.0508; //11/15/2024 test (meters)
-        public static final double GEAR_RATIO_DRIVE = (54.0 / 14.0) * (18.0 / 34.0) * (45.0 / 16.0);// 6.126
-        public static final double GEAR_RATIO_STEER = (48.0 / 18.0) * (96.0 / 16.0); // 16.0
+        public static final double GEAR_RATIO_DRIVE = (54.0 / 14.0) * (18.0 / 34.0) * (45.0 / 16.0);
+        public static final double GEAR_RATIO_STEER = (48.0 / 18.0) * (96.0 / 16.0);
 
         // this is the motor config for the swerve motors
         static {
