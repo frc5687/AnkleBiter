@@ -132,6 +132,10 @@ public class RobotState {
             _lastPose = new Pose2d(currentPose.getTranslation(), heading);
         }
 
+        if (heading == null || positions == null) {
+            System.err.println("the heading or positions were null.");
+            return;
+        }
         _poseEstimator.update(heading, positions);
         _lastTimestamp = currentTime;
         // _estimatedPose = _poseEstimator.getEstimatedPosition();

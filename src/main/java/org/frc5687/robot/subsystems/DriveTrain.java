@@ -183,10 +183,7 @@ public class DriveTrain extends OutliersSubsystem {
             _modules[SOUTH_EAST_IDX].getModuleLocation()
         );
 
-        _robotState.initializeRobotState(this);
-        _robotState.start();
-
-        // FIXME get real COF - xavier
+        // TODO get real COF, weight, moi, wheel radius - xavier
         var _config = new RobotConfig(
             Units.Pounds.of(50.0),
             Units.KilogramSquareMeters.of(9),
@@ -204,7 +201,7 @@ public class DriveTrain extends OutliersSubsystem {
         
         _swerveSetpointGenerator = new SwerveSetpointGenerator(
                 _config,
-                (DCMotor.getKrakenX60(1).freeSpeedRadPerSec / Constants.SwerveModule.GEAR_RATIO_STEER) * 0.6 // don't push the steer motor to its absolute limits :)
+                DCMotor.getKrakenX60(1).freeSpeedRadPerSec / Constants.SwerveModule.GEAR_RATIO_STEER
         );
         _headingController = new SwerveHeadingController(Constants.UPDATE_PERIOD);
 
