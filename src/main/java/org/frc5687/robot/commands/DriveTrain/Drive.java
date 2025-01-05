@@ -62,7 +62,7 @@ public class Drive extends OutliersCommand {
 
         ChassisSpeeds commandedSpeeds = new ChassisSpeeds(vx, vy, rot + controllerPower);
         if (_driveTrain.isFieldCentric()) {
-            commandedSpeeds.toRobotRelativeSpeeds(rotation);
+            commandedSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(vx, vy, rot + controllerPower, rotation);
         }
         _driveTrain.setVelocity(commandedSpeeds);
     }
