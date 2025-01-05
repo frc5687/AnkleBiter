@@ -6,7 +6,9 @@ import java.util.Optional;
 
 import org.frc5687.robot.commands.OutliersCommand;
 import org.frc5687.robot.commands.DriveTrain.Drive;
+import org.frc5687.robot.commands.Intake.IdleIntake;
 import org.frc5687.robot.subsystems.DriveTrain;
+import org.frc5687.robot.subsystems.Intake;
 import org.frc5687.robot.subsystems.OutliersSubsystem;
 import org.frc5687.robot.util.OutliersContainer;
 import org.frc5687.robot.util.OutliersPhotonCamera;
@@ -38,7 +40,8 @@ public class RobotContainer extends OutliersContainer {
     private DriveTrain _driveTrain;
     private OutliersPhotonCamera _westCam;
     private Field2d _field;
-
+    private Intake _intake;
+    
     private RobotState _robotState = RobotState.getInstance();
 
     public RobotContainer(Robot robot, IdentityMode identityMode) {
@@ -60,6 +63,7 @@ public class RobotContainer extends OutliersContainer {
         _imu.getConfigurator().apply(pigeonConfig);
 
         _driveTrain = new DriveTrain(this, _imu);
+        _intake = new Intake(this);
         _westCam = new OutliersPhotonCamera("West_Camera", Pipeline.AprilTag, new Transform3d());
 
         // _photonProcessor = new PhotonProcessor(AprilTagFields.k2024Crescendo.loadAprilTagLayoutField());
@@ -67,14 +71,14 @@ public class RobotContainer extends OutliersContainer {
         _robotState.initializeRobotState(_driveTrain);
 
         setDefaultCommand(_driveTrain, new Drive(_driveTrain, _oi));
-
+        setDefaultCommand(_intake, new IdleIntake(_intake));
         registerNamedCommands();
         // _autoChooser = AutoBuilder.buildAutoChooser("");
 
         SmartDashboard.putData(_field);
         // SmartDashboard.putData("Auto Chooser", _autoChooser);
 
-        _oi.initializeButtons(_driveTrain, _robotState);
+        _oi.initializeButtons(_driveTrain, _robotState, _intake);
 
         PPHolonomicDriveController.setRotationTargetOverride(this::getRotationTargetOverride);
     }

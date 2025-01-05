@@ -8,7 +8,9 @@ import org.frc5687.lib.oi.Gamepad;
 import org.frc5687.robot.commands.DriveTrain.DriveToPose;
 import org.frc5687.robot.commands.DriveTrain.SnapTo;
 import org.frc5687.robot.commands.DriveTrain.ZeroIMU;
+import org.frc5687.robot.commands.Intake.IntakeCommand;
 import org.frc5687.robot.subsystems.DriveTrain;
+import org.frc5687.robot.subsystems.Intake;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -61,13 +63,16 @@ public class OI {
 
     public void initializeButtons(
             DriveTrain drivetrain,
-            RobotState robotState) {
+            RobotState robotState,
+            Intake intake
+            ) {
 
         _driverGamepad.getYButton().onTrue(new SnapTo(drivetrain, new Rotation2d(0)));
         _driverGamepad.getBButton().onTrue(new SnapTo(drivetrain, new Rotation2d(3 * Math.PI / 2)));
         _driverGamepad.getAButton().onTrue(new SnapTo(drivetrain, new Rotation2d(Math.PI)));
         _driverGamepad.getXButton().onTrue(new SnapTo(drivetrain, new Rotation2d(3 * Math.PI / 2)));
-
+        
+        _driverLeftTrigger.whileTrue(new IntakeCommand(intake));
         _driverGamepad.getStartButton().onTrue(new ZeroIMU(drivetrain));
         _driverGamepad.getLeftBumper().onTrue(new InstantCommand(()->{ drivetrain._oculusProcessor.setRobotPose(new Pose2d(0.0, 0.0, drivetrain.getHeading())); }));
         _driverGamepad.getRightBumper().whileTrue(new DriveToPose(drivetrain, new Pose2d(1,1,Rotation2d.kZero)));

@@ -199,6 +199,32 @@ public class Constants {
         public static final double HEADING_TOLERANCE = 0.04; // rad
     }
 
+    public static class Intake {
+        public static final String CAN_BUS = "CANivore";
+        public static final double INTAKE_SPEED = 1.0;
+        public static final double INDEX_SPEED = 0.7;
+        public static final double SLOW_INDEX_SPEED = 0.2;
+        public static final double REVERSE_INDEX_SPEED = -INDEX_SPEED;
+        public static final double HANDOFF_SPEED = 0.75;
+        public static final OutliersTalon.Configuration CONFIG = new OutliersTalon.Configuration();
+        // this is the motor config for the swerve motors
+        static {
+            CONFIG.TIME_OUT = 0.1;
+
+            CONFIG.NEUTRAL_MODE = NeutralModeValue.Brake;
+            CONFIG.INVERTED = InvertedValue.Clockwise_Positive;
+
+            CONFIG.MAX_VOLTAGE = 12.0;
+
+            CONFIG.MAX_SUPPLY_CURRENT = 30;
+            CONFIG.MAX_STATOR_CURRENT = 30;
+            CONFIG.MAX_CURRENT = 30;
+            CONFIG.ENABLE_SUPPLY_CURRENT_LIMIT = true;
+            CONFIG.CURRENT_DEADBAND = 0.1;
+            CONFIG.USE_FOC = true;
+        }
+    }
+
     public static class Vision {
         public static final double VISION_kP = 3.0;
         public static final double VISION_kI = 0.0;
